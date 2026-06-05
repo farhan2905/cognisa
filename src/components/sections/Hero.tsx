@@ -391,7 +391,7 @@ export default function Hero() {
     <section
       id="hero"
       ref={heroRef}
-      className="section-anchor relative min-h-0 lg:min-h-screen pt-8 pb-2 md:py-12 lg:py-0 flex items-center bg-transparent overflow-hidden"
+      className="section-anchor relative min-h-0 lg:min-h-screen pt-28 pb-2 sm:pt-32 md:pt-36 lg:py-0 flex items-center bg-transparent overflow-hidden"
     >
       {/* ── Logo (desktop & mobile landing) ── */}
       <motion.div
@@ -561,10 +561,10 @@ export default function Hero() {
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6 lg:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 lg:gap-8"
           >
             {STATS.map((stat, i) => (
-              <div key={i} className="relative overflow-hidden bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.02] to-transparent backdrop-blur-xl rounded-2xl p-3 md:p-4 border border-indigo-300/30 ring-1 ring-indigo-400/10 shadow-[0_4px_16px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.45)] group hover:border-indigo-300/50 transition-all duration-500">
+              <div key={i} className={`relative overflow-hidden bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.02] to-transparent backdrop-blur-xl rounded-2xl p-3 md:p-4 border border-indigo-300/30 ring-1 ring-indigo-400/10 shadow-[0_4px_16px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.45)] group hover:border-indigo-300/50 transition-all duration-500 ${i === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
                 {/* Micro chart background */}
                 <div className="absolute inset-0 opacity-30 pointer-events-none">
                   <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">

@@ -21,7 +21,7 @@ export default function CTA() {
   };
 
   return (
-    <section id="cta" className="section-anchor relative bg-transparent py-10 md:py-16 lg:py-24 overflow-hidden">
+    <section id="cta" className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden">
       <div className="noise-overlay absolute inset-0 z-[1]" />
       <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-200 rounded-full blur-[150px] opacity-[0.10] animate-orb-1" />
       <div className="absolute bottom-0 right-1/4 w-[350px] h-[350px] bg-violet-200 rounded-full blur-[150px] opacity-[0.08] animate-orb-2" />
@@ -55,7 +55,7 @@ export default function CTA() {
                   <Link
                     href="/contact"
                     onClick={handleRipple}
-                    className="group relative inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white px-10 py-4 rounded-full text-base font-semibold hover:opacity-95 transition-all duration-300 hover:gap-3 shadow-[0_4px_16px_rgba(99,102,241,0.25)] overflow-hidden"
+                    className="group relative inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-white px-6 py-3.5 sm:px-10 sm:py-4 rounded-full text-base font-semibold hover:opacity-95 transition-all duration-300 hover:gap-3 shadow-[0_4px_16px_rgba(99,102,241,0.25)] overflow-hidden"
                   >
                     {ripples.map((ripple) => (
                       <span
@@ -75,7 +75,7 @@ export default function CTA() {
                 </motion.div>
                 <a
                   href="mailto:hello@cognisa.in"
-                  className="inline-flex items-center gap-2 border border-foreground/20 text-foreground px-10 py-4 rounded-full text-base font-medium hover:bg-foreground/5 hover:border-foreground/30 transition-all duration-300"
+                  className="inline-flex items-center gap-2 border border-foreground/20 text-foreground px-6 py-3.5 sm:px-10 sm:py-4 rounded-full text-base font-medium hover:bg-foreground/5 hover:border-foreground/30 transition-all duration-300"
                 >
                   hello@cognisa.in
                 </a>
@@ -91,7 +91,7 @@ export default function CTA() {
               className="relative flex items-center justify-center"
             >
               {/* Metrics Panel */}
-              <div className="relative glass-panel rounded-[2rem] p-6 md:p-8 w-full max-w-sm shadow-[0_16px_48px_rgba(99,102,241,0.15)]">
+              <div className="relative glass-panel rounded-[2rem] p-6 md:p-8 w-full max-w-sm lg:max-w-md shadow-[0_16px_48px_rgba(99,102,241,0.15)]">
                 <div className="flex items-center gap-2 mb-6 pb-4 border-b border-indigo-300/20">
                   <div className="relative">
                     <div className="w-2 h-2 rounded-full bg-emerald-400" />

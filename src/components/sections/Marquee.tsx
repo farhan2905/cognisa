@@ -128,7 +128,7 @@ export default function Marquee() {
               (item, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-2 mx-8 md:mx-12 font-mono text-[10px] md:text-xs text-indigo-300/25 tracking-wide whitespace-nowrap"
+                  className="inline-flex items-center gap-2 mx-8 md:mx-12 font-mono text-[11px] md:text-xs text-indigo-300/25 tracking-wide whitespace-nowrap"
                 >
                   <GitBranch className="w-3 h-3 opacity-40" />
                   {item}

@@ -19,7 +19,7 @@ import GlobalAmbientBackground from '@/components/shared/GlobalAmbientBackground
 
 export default function Home() {
   return (
-    <main className="min-h-screen pt-0 pb-4 px-2 md:pb-6 md:px-4 lg:pl-28 lg:pr-6 flex justify-center items-start overflow-x-clip text-text-primary relative">
+    <main className="min-h-screen pt-0 pb-4 px-2 md:pb-6 md:px-4 lg:pl-20 lg:pr-4 xl:pl-28 xl:pr-6 flex justify-center items-start overflow-x-clip text-text-primary relative">
       {/* Global ambient background — noise, orbs, spotlight, grid */}
       <GlobalAmbientBackground />
 

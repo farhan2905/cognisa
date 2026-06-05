@@ -75,7 +75,7 @@ export default function Insights() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section ref={ref} className="section-anchor bg-transparent py-10 md:py-16 lg:py-24" id="insights">
+    <section ref={ref} className="section-anchor bg-transparent py-8 md:py-12 lg:py-16" id="insights">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-16 gap-8">
           <div className="max-w-2xl">

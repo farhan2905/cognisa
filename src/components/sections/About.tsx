@@ -63,10 +63,10 @@ function BenefitCard({ benefit, index, isInView }: { benefit: typeof benefits[0]
   };
 
   const positions = [
-    'lg:justify-self-end lg:mr-10',
-    'lg:justify-self-start lg:ml-10',
-    'lg:justify-self-end lg:mr-10',
-    'lg:justify-self-start lg:ml-10',
+    'lg:justify-self-end lg:mr-4 xl:mr-10',
+    'lg:justify-self-start lg:ml-4 xl:ml-10',
+    'lg:justify-self-end lg:mr-4 xl:mr-10',
+    'lg:justify-self-start lg:ml-4 xl:ml-10',
   ];
 
   return (
@@ -127,7 +127,7 @@ export default function About() {
     <section
       id="about"
       ref={ref}
-      className="section-anchor relative bg-transparent py-10 md:py-16 lg:py-24 overflow-hidden"
+      className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden"
     >
       {/* Dynamic Background Gradients */}
       <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-indigo-200/50 rounded-full blur-[120px] pointer-events-none animate-orb-2" />

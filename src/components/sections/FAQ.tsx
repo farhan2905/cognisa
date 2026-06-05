@@ -112,9 +112,9 @@ function FAQCard({
 
       <button
         onClick={() => setOpenIndex(isOpen ? null : globalIndex)}
-        className="w-full flex items-center justify-between p-5 text-left focus:outline-none relative z-10"
+        className="w-full flex items-start justify-between p-5 text-left focus:outline-none relative z-10"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3 pt-0.5">
           <span className="font-mono text-[10px] font-bold text-indigo-500/60 bg-indigo-500/10 px-2 py-1 rounded-md">
             &gt; Q{String(globalIndex + 1).padStart(2, '0')}
           </span>
@@ -209,7 +209,7 @@ export default function FAQ() {
   };
 
   return (
-    <section ref={ref} className="section-anchor bg-transparent py-10 md:py-16 lg:py-24" id="faq">
+    <section ref={ref} className="section-anchor bg-transparent py-8 md:py-12 lg:py-16" id="faq">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <div className="text-center mb-8 md:mb-12">
           <SectionTag text="FAQ" variant="light" className="justify-center" />

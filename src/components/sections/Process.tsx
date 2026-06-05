@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import SectionTag from '@/components/shared/SectionTag';
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
@@ -16,12 +16,36 @@ const works = [
 
 export default function Process() {
   const targetRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [xRange, setXRange] = useState<[number | string, number | string]>(["5%", "-75%"]);
   
   const { scrollYProgress } = useScroll({ 
     target: targetRef,
     offset: ["start start", "end end"]
   });
+
+  useEffect(() => {
+    const calculateRange = () => {
+      if (!containerRef.current) return;
+      const containerWidth = containerRef.current.scrollWidth;
+      const viewportWidth = window.innerWidth;
+      
+      const startValue = viewportWidth * 0.05;
+      const endValue = viewportWidth - containerWidth - 24;
+      
+      setXRange([startValue, endValue]);
+    };
+    
+    calculateRange();
+    const timer = setTimeout(calculateRange, 500);
+    
+    window.addEventListener('resize', calculateRange);
+    return () => {
+      window.removeEventListener('resize', calculateRange);
+      clearTimeout(timer);
+    };
+  }, []);
 
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
     let index = Math.floor(latest * 5);
@@ -33,12 +57,12 @@ export default function Process() {
 
   const activeColor1 = works[activeIndex].color;
   const activeColor2 = works[activeIndex].color2;
-  const x = useTransform(scrollYProgress, [0, 1], ["5%", "-75%"]);
+  const x = useTransform(scrollYProgress, [0, 1], xRange);
 
   return (
     <section id="work" ref={targetRef} className="section-anchor relative h-[340vh] md:h-[400vh] bg-transparent">
       
-      <div className="sticky top-0 h-[100vh] flex flex-col justify-start lg:justify-center overflow-hidden z-10 pt-16 md:pt-20 lg:pt-0">
+      <div className="sticky top-0 h-[100vh] flex flex-col justify-start items-center overflow-hidden z-10 pt-16 md:pt-20 lg:pt-6 xl:pt-8">
         
         {/* Dynamic color-changing background orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -54,7 +78,7 @@ export default function Process() {
             className="absolute bottom-[10%] right-[10%] translate-x-1/4 translate-y-1/4 w-[70vw] h-[70vw] md:w-[55vw] md:h-[55vw] rounded-full blur-[140px] opacity-[0.20] pointer-events-none" 
           />
         </div>
-        <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 mb-4 mt-6 md:mb-8 md:mt-6 lg:mt-10 flex-shrink-0 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="process-header-container w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 mb-2 mt-4 md:mb-4 md:mt-4 lg:mt-6 flex-shrink-0 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <SectionTag text="OUR WORK" variant="light" />
             <motion.h2 
@@ -78,7 +102,7 @@ export default function Process() {
           </motion.div>
         </div>
 
-        <motion.div style={{ x }} className="flex gap-6 md:gap-24 lg:gap-32 px-4 md:px-12 lg:px-20 w-fit pb-12 items-center">
+        <motion.div ref={containerRef} style={{ x }} className="flex gap-6 md:gap-12 lg:gap-16 xl:gap-20 px-4 md:px-12 lg:px-20 w-fit pb-4 items-center">
           {works.map((work, idx) => (
             <WorkCard key={work.number} work={work} index={idx} total={works.length} />
           ))}
@@ -99,13 +123,13 @@ function WorkCard({ work, index, total }: { work: typeof works[0], index: number
   };
 
   return (
-    <div className="flex flex-col gap-3 md:gap-8 w-[85vw] md:w-[55vw] lg:w-[42vw] flex-shrink-0 relative group items-center">
+    <div className="process-card-wrapper flex flex-col gap-3 md:gap-4 w-[85vw] md:w-[45vw] lg:w-[31vw] xl:w-[25vw] 2xl:w-[21vw] flex-shrink-0 relative group items-center">
       {/* Website Information Card (Above the browser) */}
       <div 
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="w-full relative overflow-hidden bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent backdrop-blur-2xl p-4 sm:p-5 md:p-8 rounded-2xl md:rounded-3xl border border-indigo-300/30 ring-1 ring-indigo-400/10 shadow-[0_10px_30px_rgba(99,102,241,0.05),inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-500 hover:border-indigo-300/50 hover:shadow-[0_16px_40px_rgba(99,102,241,0.08),inset_0_1px_0_rgba(255,255,255,0.55)]"
+        className="process-info-card w-full relative overflow-hidden bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent backdrop-blur-2xl p-4 sm:p-5 md:p-6 rounded-2xl md:rounded-3xl border border-indigo-300/30 ring-1 ring-indigo-400/10 shadow-[0_10px_30px_rgba(99,102,241,0.05),inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-500 hover:border-indigo-300/50 hover:shadow-[0_16px_40px_rgba(99,102,241,0.08),inset_0_1px_0_rgba(255,255,255,0.55)]"
       >
         {/* Spotlight overlay */}
         {isHovered && (
@@ -146,7 +170,7 @@ function WorkCard({ work, index, total }: { work: typeof works[0], index: number
 
       {/* Browser Window Card */}
       <div 
-        className="w-full h-[28vh] sm:h-[38vh] md:h-[55vh] rounded-[1.5rem] md:rounded-[2rem] border border-indigo-300/30 shadow-[0_20px_60px_rgba(0,0,0,0.15)] relative overflow-hidden bg-zinc-950 transition-all duration-500 group-hover:shadow-[0_25px_70px_rgba(99,102,241,0.15)]"
+        className="process-browser-card w-full h-[32vh] min-h-[180px] max-h-[340px] md:h-[39vh] lg:h-[41vh] xl:h-[44vh] 2xl:h-[46vh] md:max-h-none rounded-[1.5rem] md:rounded-[2rem] border border-indigo-300/30 shadow-[0_20px_60px_rgba(0,0,0,0.15)] relative overflow-hidden bg-zinc-950 transition-all duration-500 group-hover:shadow-[0_25px_70px_rgba(99,102,241,0.15)]"
         onMouseLeave={() => setIsInteractive(false)}
         style={{
           boxShadow: `0 20px 60px rgba(0,0,0,0.15), 0 0 30px ${work.color}10`
@@ -165,8 +189,13 @@ function WorkCard({ work, index, total }: { work: typeof works[0], index: number
         </div>
 
         {/* Browser Body / Iframe */}
-        <div className="w-full h-full pt-10 relative z-10 bg-background/50">
-          <iframe src={work.link} className="w-full h-full border-none scale-[1.01]" sandbox="allow-scripts allow-same-origin" title={work.title} />
+        <div className="w-full h-full pt-10 relative z-10 bg-background/50 overflow-hidden">
+          <iframe 
+            src={work.link} 
+            className="w-[200%] h-[200%] border-none origin-top-left scale-50" 
+            sandbox="allow-scripts allow-same-origin" 
+            title={work.title} 
+          />
           
           <div 
             className={`absolute inset-0 z-20 flex items-center justify-center transition-all duration-300 ${isInteractive ? 'opacity-0 pointer-events-none' : 'opacity-100 bg-background/20 cursor-pointer pointer-events-auto backdrop-blur-[2px]'}`} 

@@ -734,3 +734,134 @@ mark {
 }
 
 /* Base font-size uses browser default (16px) for correct rem scaling at any zoom level */
+
+/* ========== RESPONSIVE HEIGHT OPTIMIZATIONS FOR SERVICES STICKY CONTAINER ========== */
+
+/* For viewports with height less than 800px */
+@media (max-height: 800px) and (min-width: 1024px) {
+  /* Prevent vertical centering overlap by pushing to flex-start */
+  .services-sticky-container {
+    justify-content: flex-start !important;
+    padding-top: 1.5rem !important;
+  }
+  
+  /* Scale down the header container bottom margin */
+  .services-header-container {
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Scale down the header heading size and margins */
+  .services-header-title {
+    font-size: 2rem !important; /* text-3xl */
+    line-height: 2.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  /* Hide the paragraph description and CTA button in the header */
+  .services-header-desc,
+  .services-header-btn {
+    display: none !important;
+  }
+  
+  /* Scale down card height */
+  .services-card-container {
+    height: 30rem !important; /* ~384px */
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Hide arched pagination numbers and reduce height on short viewports */
+  .services-pagination-container > div:first-child {
+    display: none !important;
+  }
+  .services-pagination-container {
+    height: 30px !important;
+    margin-top: 0.25rem !important;
+  }
+  
+  /* Reduce padding inside cards */
+  .services-card-content {
+    padding: 1.25rem !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* For extremely short screens (height less than 680px) */
+@media (max-height: 680px) and (min-width: 1024px) {
+  .services-sticky-container {
+    padding-top: 0.75rem !important;
+  }
+  
+  .services-header-title {
+    font-size: 1.6rem !important;
+    line-height: 1.8rem !important;
+  }
+  
+  .services-card-container {
+    height: 24rem !important;
+  }
+  
+  .services-pagination-container {
+    height: 30px !important;
+  }
+}
+
+/* ========== RESPONSIVE HEIGHT OPTIMIZATIONS FOR PROCESS/WORK PREVIEW ========== */
+
+/* For screen heights less than 840px */
+@media (max-height: 840px) and (min-width: 1024px) {
+  /* Compress Process header margins */
+  .process-header-container {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  /* Reduce gap between Info Card and Browser Card */
+  .process-card-wrapper {
+    gap: 0.5rem !important;
+  }
+  
+  /* Compress the Info Card paddings */
+  .process-info-card {
+    padding: 1rem !important;
+  }
+  
+  /* Shrink titles and clamp descriptions to 2 lines */
+  .process-info-card h3 {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  .process-info-card p {
+    font-size: 0.85rem !important;
+    line-height: 1.25rem !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  
+  /* Set fallback browser card height */
+  .process-browser-card {
+    height: 45vh !important;
+  }
+}
+
+/* For extremely short screens (height less than 720px) */
+@media (max-height: 720px) and (min-width: 1024px) {
+  .process-header-container {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.15rem !important;
+  }
+  
+  .process-info-card {
+    padding: 0.75rem !important;
+  }
+  
+  /* Clamp description to 1 line on tiny heights */
+  .process-info-card p {
+    -webkit-line-clamp: 1 !important;
+  }
+  
+  .process-browser-card {
+    height: 38vh !important;
+  }
+}

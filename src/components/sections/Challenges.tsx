@@ -256,7 +256,7 @@ export default function Challenges() {
   const activeTabConfig = tabs.find((t) => t.key === activeTab)!;
 
   return (
-    <section ref={ref} className="section-anchor bg-transparent py-10 md:py-16 lg:py-24" id="challenges">
+    <section ref={ref} className="section-anchor bg-transparent py-6 md:py-12 lg:py-16" id="challenges">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         {/* Section Header */}
         <div className="text-center mb-8 md:mb-12">
@@ -289,7 +289,7 @@ export default function Challenges() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ delay: 0.25, duration: 0.7 }}
-          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-8 md:mb-10"
+          className="flex flex-col md:flex-row items-stretch md:items-center gap-3 mb-8 md:mb-10"
         >
           {tabs.map((tab) => {
             const TabIcon = tab.icon;
@@ -373,7 +373,7 @@ export default function Challenges() {
         </motion.div>
 
         {/* ─── Cards Grid ─── */}
-        <div className="min-h-[400px]">
+        <div className="min-h-[250px] md:min-h-[280px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -381,7 +381,7 @@ export default function Challenges() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5"
             >
               {filteredCards.map((card, i) => (
                 <ChallengeCardItem
@@ -400,7 +400,7 @@ export default function Challenges() {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ delay: 0.5, duration: 0.7 }}
-          className="text-center mt-8 md:mt-10"
+          className="text-center mt-5 md:mt-10"
         >
           <Link
             href="/contact"

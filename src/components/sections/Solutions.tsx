@@ -63,6 +63,7 @@ export default function Solutions() {
   const [rotateY, setRotateY] = useState(0);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches) return;
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
@@ -85,20 +86,20 @@ export default function Solutions() {
   };
 
   return (
-    <section id="solutions" ref={containerRef} className="relative py-10 md:py-16 lg:py-24 overflow-hidden">
+    <section id="solutions" ref={containerRef} className="relative py-6 md:py-12 lg:py-16 overflow-hidden">
       {/* Background Orbs */}
       <div className="absolute top-1/3 left-[-10%] w-[450px] h-[450px] bg-indigo-200/30 rounded-full blur-[120px] pointer-events-none animate-orb-1" />
       <div className="absolute bottom-1/3 right-[-10%] w-[400px] h-[400px] bg-violet-200/20 rounded-full blur-[120px] pointer-events-none animate-orb-2" />
 
-      <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 lg:px-12 relative z-10">
+      <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 lg:px-8 xl:px-12 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-8 md:mb-12">
+        <div className="text-center mb-5 md:mb-12">
           <SectionTag text="INTERACTIVE PIPELINE" variant="light" className="justify-center" />
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
-            className="text-3xl md:text-5xl font-extrabold text-foreground mt-4 tracking-tight leading-tight"
+            className="text-3xl md:text-5xl font-extrabold text-foreground mt-2 md:mt-4 tracking-tight leading-tight"
           >
             Process Simulation{' '}
             <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-650 to-violet-600 px-3 py-1 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
@@ -123,7 +124,7 @@ export default function Solutions() {
           onMouseLeave={handleMouseLeave}
           animate={{ rotateX, rotateY }}
           transition={{ type: 'spring', stiffness: 220, damping: 25 }}
-          className="relative overflow-hidden rounded-[2.5rem] backdrop-blur-2xl border border-indigo-300/30 ring-1 ring-indigo-400/10 bg-gradient-to-br from-blue-600/[0.03] via-indigo-500/[0.015] to-transparent shadow-[0_12px_40px_rgba(99,102,241,0.06),inset_0_1px_0_rgba(255,255,255,0.45)] hover:border-indigo-300/50 hover:shadow-[0_24px_60px_rgba(99,102,241,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-500 p-6 md:p-8 lg:p-10"
+          className="relative overflow-hidden rounded-[2.5rem] backdrop-blur-2xl border border-indigo-300/30 ring-1 ring-indigo-400/10 bg-gradient-to-br from-blue-600/[0.03] via-indigo-500/[0.015] to-transparent shadow-[0_12px_40px_rgba(99,102,241,0.06),inset_0_1px_0_rgba(255,255,255,0.45)] hover:border-indigo-300/50 hover:shadow-[0_24px_60px_rgba(99,102,241,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-500 p-4 sm:p-6 md:p-8 lg:p-8 xl:p-10"
           style={{ transformStyle: 'preserve-3d', perspective: 1500 }}
         >
           {/* Spotlight background overlay */}
@@ -143,7 +144,7 @@ export default function Solutions() {
           <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full blur-[60px] bg-indigo-500/15 pointer-events-none z-0" />
 
           {/* Bento grid inside the card */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative z-10 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 xl:gap-12 relative z-10 items-stretch">
             
             {/* Left Column: Interactive Subcards of Process */}
             <div className="lg:col-span-5 flex flex-col justify-between" style={{ transform: 'translateZ(30px)' }}>

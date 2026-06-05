@@ -220,7 +220,7 @@ export default function Stats() {
   }, []);
 
   return (
-    <section id="stats" ref={ref} className="section-anchor relative bg-transparent py-10 md:py-16 lg:py-24 overflow-hidden">
+    <section id="stats" ref={ref} className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-200 rounded-full blur-[200px] opacity-[0.06]" />
       {/* Radar scanner behind counter */}
       <div className="absolute right-[5%] top-1/2 -translate-y-1/2 w-72 h-72 md:w-96 md:h-96 opacity-[0.06] pointer-events-none hidden lg:block">

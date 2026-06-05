@@ -73,13 +73,15 @@ function TestimonialCard({
   index, 
   active, 
   setActive, 
-  isInView 
+  isInView,
+  className = ""
 }: { 
   testimonial: typeof testimonials[0]; 
   index: number; 
   active: number; 
   setActive: (idx: number) => void;
   isInView: boolean;
+  className?: string;
 }) {
   const isActive = active === index;
   const [coords, setCoords] = useState({ x: 0, y: 0 });
@@ -104,7 +106,7 @@ function TestimonialCard({
         isActive
           ? 'bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border-indigo-400/60 ring-2 ring-indigo-400/20 shadow-[0_16px_40px_rgba(99,102,241,0.12),inset_0_1px_0_rgba(255,255,255,0.45)] scale-[1.02]'
           : 'bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent border-indigo-300/40 hover:border-indigo-300/60 hover:shadow-[0_12px_36px_rgba(99,102,241,0.06),inset_0_1px_0_rgba(255,255,255,0.55)] opacity-75 md:opacity-100'
-      }`}
+      } ${className}`}
     >
       {/* Spotlight overlay */}
       {isHovered && (
@@ -168,7 +170,7 @@ export default function Testimonials() {
   }, [isInView]);
 
   return (
-    <section id="testimonials" ref={ref} className="section-anchor relative bg-transparent py-10 md:py-16 lg:py-24 overflow-hidden">
+    <section id="testimonials" ref={ref} className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -189,7 +191,7 @@ export default function Testimonials() {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {testimonials.map((testimonial, i) => (
             <TestimonialCard 
               key={testimonial.name}
@@ -198,6 +200,7 @@ export default function Testimonials() {
               active={active}
               setActive={setActive}
               isInView={isInView}
+              className={i === 2 ? 'md:col-span-2 lg:col-span-1' : ''}
             />
           ))}
         </div>

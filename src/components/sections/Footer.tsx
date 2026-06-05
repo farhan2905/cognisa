@@ -130,7 +130,7 @@ function BackToTop() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full glass-surface-strong border border-indigo-300/40 flex items-center justify-center text-foreground/60 hover:text-indigo-500 hover:border-indigo-400/50 transition-all shadow-[0_8px_24px_rgba(99,102,241,0.15)]"
+          className="hidden lg:flex fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full glass-surface-strong border border-indigo-300/40 items-center justify-center text-foreground/60 hover:text-indigo-500 hover:border-indigo-400/50 transition-all shadow-[0_8px_24px_rgba(99,102,241,0.15)]"
         >
           <ArrowUp className="w-5 h-5" />
         </motion.button>
@@ -144,12 +144,12 @@ export default function Footer() {
     <>
       <BackToTop />
       <footer className="bg-transparent border-t border-foreground/10">
-        <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 py-10 md:py-16 lg:py-24">
+        <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 py-8 md:py-12 lg:py-16">
           <div className="bg-gradient-to-br from-blue-600/[0.06] via-indigo-500/[0.025] to-transparent backdrop-blur-2xl rounded-[1.5rem] md:rounded-[2.5rem] p-4 sm:p-6 md:p-[3.45rem] border border-indigo-300/40 ring-1 ring-indigo-400/15 shadow-[0_10px_30px_rgba(59,130,246,0.12),inset_0_1px_0_rgba(255,255,255,0.45)] overflow-hidden">
             {/* Status Bar */}
             <StatusBar />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-12 lg:gap-8 mt-8">
               <div className="lg:col-span-1">
                 <Link href="/" className="inline-flex items-center">
                   <Logo className="h-9 md:h-10 w-auto" />
