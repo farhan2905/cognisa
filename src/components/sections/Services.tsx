@@ -104,7 +104,7 @@ export default function Services() {
   return (
     <section id="services" ref={containerRef} className="section-anchor relative h-[360vh] md:h-[400vh] bg-transparent">
       {/* Sticky visible area */}
-      <div className="services-sticky-container sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-start lg:justify-start xl:justify-center items-center pt-16 pb-6 md:pt-20 md:pb-10 lg:pt-6 xl:pt-0 z-10">
+      <div className="services-sticky-container sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-start lg:justify-start xl:justify-center items-center pt-6 pb-6 md:pt-20 md:pb-10 lg:pt-6 xl:pt-0 z-10">
         
         {/* Background ambient glow */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -122,15 +122,18 @@ export default function Services() {
         <div className="relative z-10 w-full max-w-[1200px] mx-auto flex flex-col items-center">
           
           {/* Header Area */}
-          <div className="services-header-container text-center max-w-3xl mx-auto px-4 mb-3 sm:mb-6 md:mb-8 lg:mb-4 xl:mb-12 w-full">
-            <div className="inline-flex items-center gap-4 px-6 py-2 rounded-2xl border backdrop-blur-[100px] bg-gradient-to-r from-white/8 via-white/4 to-white/2 border-indigo-300/40 hover:border-white/35 shadow-[inset_0_2px_2px_rgba(255,255,255,0.3),0_8px_24px_rgba(31,38,135,0.1)] mb-3 sm:mb-6 group">
-              <span className="w-4 h-4 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-md group-hover:scale-110 transition-transform" />
+          <div className="services-header-container text-center max-w-3xl mx-auto px-4 mb-2 sm:mb-4 md:mb-6 lg:mb-4 xl:mb-12 w-full">
+            <div className="inline-flex items-center gap-3 px-4 py-1.5 sm:px-6 sm:py-2 rounded-2xl border backdrop-blur-[100px] bg-gradient-to-r from-white/8 via-white/4 to-white/2 border-indigo-300/40 hover:border-white/35 shadow-[inset_0_2px_2px_rgba(255,255,255,0.3),0_8px_24px_rgba(31,38,135,0.1)] mb-1.5 sm:mb-4 group">
+              <span className="relative w-4 h-4 group-hover:scale-110 transition-transform">
+                <span className="absolute inset-0 rounded-md bg-gradient-to-br from-indigo-400 to-indigo-600 animate-ping opacity-40" />
+                <span className="relative block w-4 h-4 rounded-md bg-gradient-to-br from-indigo-400 to-indigo-600" />
+              </span>
               <span className="text-sm md:text-base font-mono uppercase tracking-[0.2em] font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400">
                 OUR SERVICES
               </span>
               <span className="h-1 w-12 md:w-16 rounded-full bg-gradient-to-r from-indigo-400/60 to-transparent" />
             </div>
-            <h2 className="services-header-title text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#38bdf8] via-[#818cf8] to-[#c084fc] drop-shadow-sm mb-2 sm:mb-4 leading-tight tracking-tight">
+            <h2 className="services-header-title text-lg sm:text-3xl md:text-5xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#38bdf8] via-[#818cf8] to-[#c084fc] drop-shadow-sm mb-1 sm:mb-3 leading-tight tracking-tight whitespace-nowrap">
               Services that drive growth.
             </h2>
             <p className="services-header-desc text-foreground/70 text-base md:text-lg leading-relaxed mb-4 font-medium hidden xl:block">
@@ -138,15 +141,15 @@ export default function Services() {
             </p>
             <Link 
               href="/services" 
-              className="services-header-btn inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/40 rounded-full font-semibold text-foreground hover:from-blue-600/[0.15] hover:via-indigo-500/[0.08] transition-all shadow-[0_4px_12px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,1)] group mx-auto hidden xl:inline-flex"
+              className="services-header-btn inline-flex items-center gap-2 px-5 py-2 md:px-6 md:py-3 bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/40 rounded-full font-semibold text-foreground hover:from-blue-600/[0.15] hover:via-indigo-500/[0.08] transition-all shadow-[0_4px_12px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,1)] group mx-auto text-xs md:text-sm"
             >
               View All Services
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
           {/* Cards Area */}
-          <div className="services-card-container w-full relative h-[39rem] sm:h-[42rem] md:h-[36rem] lg:h-[38rem] xl:h-[37rem] mb-3 md:mb-8 px-4">
+          <div className="services-card-container w-full relative h-[19rem] sm:h-[24rem] md:h-[36rem] lg:h-[38rem] xl:h-[37rem] mb-3 md:mb-8 px-4">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeIndex}
@@ -178,12 +181,12 @@ export default function Services() {
                 {/* Card Content Row */}
                 <div className="services-card-content flex flex-col-reverse md:flex-row gap-3 md:gap-12 items-stretch p-3.5 sm:p-5 md:p-8 lg:p-8 pb-3.5 md:pb-8 h-full flex-grow relative">
                   
-                  {/* Left Content with spotlight */}
+                  {/* Left Content with spotlight (hidden on mobile/tablet, rendered below the card) */}
                   <div 
                     onMouseMove={handleLeftMouseMove}
                     onMouseEnter={() => setLeftHovered(true)}
                     onMouseLeave={() => setLeftHovered(false)}
-                    className="w-full md:w-[50%] text-left relative z-10 flex flex-col justify-start md:justify-center flex-grow md:h-full p-1 sm:p-2 pb-0 md:p-6 rounded-2xl transition-all duration-500 overflow-hidden"
+                    className="hidden md:flex w-full md:w-[50%] text-left relative z-10 flex-col justify-start md:justify-center flex-grow md:h-full p-1 sm:p-2 pb-0 md:p-6 rounded-2xl transition-all duration-500 overflow-hidden"
                   >
                     {leftHovered && (
                       <div 
@@ -206,7 +209,7 @@ export default function Services() {
                       {activeService.description}
                     </p>
                     
-                    <div className="mt-auto pt-3 md:pt-0 block relative z-10">
+                    <div className="mt-4 md:mt-6 block relative z-10">
                       <Link href={`/services/${activeService.slug}`} className="group inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 md:px-6 md:py-3 bg-gradient-to-br from-blue-600/[0.05] via-indigo-500/[0.02] to-transparent hover:bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/30 rounded-[1.25rem] text-sm md:text-sm font-semibold transition-all text-foreground/80 hover:text-foreground">
                         Explore {activeService.title}
                         <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
@@ -219,7 +222,7 @@ export default function Services() {
                     onMouseMove={handleRightMouseMove}
                     onMouseEnter={() => setRightHovered(true)}
                     onMouseLeave={() => setRightHovered(false)}
-                    className="w-full md:w-[50%] h-36 sm:h-44 md:h-full rounded-[1rem] md:rounded-[1.5rem] flex flex-col relative overflow-hidden p-0 md:p-6 bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent border border-indigo-300/30 ring-1 ring-indigo-400/10 shadow-[0_10px_30px_rgba(99,102,241,0.04),inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-500 hover:border-indigo-300/50 hover:shadow-[0_16px_40px_rgba(99,102,241,0.08)] group/right"
+                    className="w-full md:w-[50%] h-full rounded-[1rem] md:rounded-[1.5rem] flex flex-col relative overflow-hidden p-0 md:p-6 bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent border border-indigo-300/30 ring-1 ring-indigo-400/10 shadow-[0_10px_30px_rgba(99,102,241,0.04),inset_0_1px_0_rgba(255,255,255,0.45)] transition-all duration-500 hover:border-indigo-300/50 hover:shadow-[0_16px_40px_rgba(99,102,241,0.08)] group/right"
                   >
                     {rightHovered && (
                       <div 
@@ -259,50 +262,32 @@ export default function Services() {
             </AnimatePresence>
           </div>
 
-          {/* Arched Pagination Overlay */}
-          <div className="services-pagination-container flex flex-col items-center justify-center relative w-full h-[30px] md:h-[90px] xl:h-[120px] pointer-events-none mt-2 md:mt-4">
-            <div className="relative w-full h-full hidden md:flex justify-center items-start">
-              {services.map((service, i) => {
-                const distance = Math.abs(activeIndex - i);
-                const isActive = activeIndex === i;
-                
-                // Arch math: Creates an umbrella curve shape
-                const xOffset = (i - activeIndex) * (isMobileScreen ? 45 : 90); // horizontal separation
-                const yOffset = distance * distance * (isMobileScreen ? 5 : 15); // parabolic arch downward
-                const scale = Math.max(0.4, 1 - distance * 0.25);
-                const opacity = Math.max(0.1, 1 - distance * 0.6);
-                const rotate = (i - activeIndex) * 15; // outward rotation
-                
-                return (
-                  <motion.div
-                    key={service.number}
-                    className="absolute top-0 flex flex-col items-center"
-                    animate={{
-                      x: xOffset,
-                      y: yOffset,
-                      scale: isActive ? 1.2 : scale,
-                      opacity: isActive ? 1 : opacity,
-                      rotate: rotate,
-                      zIndex: isActive ? 10 : 5 - distance
-                    }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  >
-                      <div 
-                        className={`rounded-full flex items-center justify-center font-bold text-xs md:text-xl transition-all duration-300 ${
-                          isActive 
-                            ? 'w-10 h-10 md:w-20 md:h-20 bg-white/70 backdrop-blur-md border border-indigo-500/20 text-indigo-600 shadow-[0_10px_25px_rgba(99,102,241,0.25),inset_0_1px_0_rgba(255,255,255,0.45)]' 
-                            : 'w-10 h-10 md:w-20 md:h-20 bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent backdrop-blur-sm border border-indigo-300/30 text-foreground/50 hover:text-foreground/80 hover:border-indigo-300/50'
-                        }`}
-                        style={isActive ? { borderColor: `${service.color}40`, boxShadow: `0 10px 25px ${service.color}25, inset 0 1px 0 rgba(255,255,255,0.45)` } : {}}
-                      >
-                        {service.number}
-                      </div>
-                  </motion.div>
-                );
-              })}
+          {/* Mobile Description Block (rendered below the card to prevent vertical cropping on small screens) */}
+          <div className="w-full flex flex-col items-center text-center px-6 mt-6 md:hidden">
+            <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-gradient-to-br from-blue-600/[0.05] via-indigo-500/[0.02] to-transparent border border-indigo-300/30 text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/60 mb-3 shadow-sm">
+              {activeService.category}
             </div>
             
-            <div className="absolute bottom-2 text-foreground/30 text-[10px] md:text-xs font-mono tracking-[0.2em] font-bold uppercase">
+            <h3 className="text-xl sm:text-2xl font-extrabold text-foreground mb-2 tracking-tight leading-tight">
+              {activeService.title}
+            </h3>
+            
+            <p className="text-[13px] sm:text-sm text-slate-700 mb-4 leading-relaxed font-medium">
+              {activeService.description}
+            </p>
+            
+            <Link 
+              href={`/services/${activeService.slug}`} 
+              className="group inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-blue-600/[0.05] via-indigo-500/[0.02] to-transparent hover:bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/30 rounded-[1.25rem] text-sm font-semibold transition-all text-foreground/80 hover:text-foreground"
+            >
+              Explore {activeService.title}
+              <ArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
+            </Link>
+          </div>
+
+          {/* Pagination Text Indicator */}
+          <div className="services-pagination-container flex flex-col items-center justify-center relative w-full h-[30px] pointer-events-none mt-4">
+            <div className="text-foreground/30 text-[10px] md:text-xs font-mono tracking-[0.2em] font-bold uppercase">
               Service {activeIndex + 1} of 4
             </div>
           </div>

@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import SectionTag from '@/components/shared/SectionTag';
-import { ArrowRight, Globe, BrainCircuit, Wallet, HelpCircle, Rocket, ShieldCheck, Clock, Users, Code2, Bot, Settings, Headphones } from 'lucide-react';
+import { ArrowRight, Globe, BrainCircuit, Wallet, HelpCircle, Rocket, ShieldCheck, Clock, Users, Code2, Bot, Settings, Headphones, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 /* ═══════════════════════════════════════════════
@@ -284,12 +284,12 @@ export default function Challenges() {
           </motion.p>
         </div>
 
-        {/* ─── Tab Bar ─── */}
+        {/* Desktop Tab Bar (visible on md+) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ delay: 0.25, duration: 0.7 }}
-          className="flex flex-col md:flex-row items-stretch md:items-center gap-3 mb-8 md:mb-10"
+          className="hidden md:flex flex-row items-center gap-3 mb-10 w-full"
         >
           {tabs.map((tab) => {
             const TabIcon = tab.icon;
@@ -371,6 +371,58 @@ export default function Challenges() {
             );
           })}
         </motion.div>
+
+        {/* Mobile Tab Carousel (visible only on mobile/tablet < md) */}
+        <div className="flex md:hidden items-center gap-3 mb-8 w-full px-1">
+          {/* Active Tab Card */}
+          <div className="relative flex-1 flex items-center gap-3 px-4 py-4 pr-4 rounded-2xl border bg-gradient-to-br from-white/60 via-white/40 to-white/20 border-indigo-400/50 shadow-[0_12px_36px_rgba(99,102,241,0.08),inset_0_1px_0_rgba(255,255,255,0.6)] overflow-hidden">
+            {/* Active indicator bar */}
+            <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-gradient-to-b ${activeTabConfig.color}`} />
+            
+            {/* Auto-play progress bar */}
+            {autoPlay && (
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-indigo-100/30">
+                <div
+                  className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full progress-bar-fill"
+                  style={{ '--duration': '8s' } as React.CSSProperties}
+                />
+              </div>
+            )}
+
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-indigo-500/15 to-violet-500/10 border border-indigo-300/30 scale-110">
+              {(() => {
+                const TabIcon = activeTabConfig.icon;
+                return <TabIcon className="w-4 h-4 text-indigo-600" />;
+              })()}
+            </div>
+
+            <div className="min-w-0 flex-grow">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-foreground truncate">{activeTabConfig.label}</span>
+                {activeTabConfig.badge && (
+                  <span className="text-[8px] font-mono font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white shrink-0">
+                    {activeTabConfig.badge}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-foreground/50 mt-0.5 font-medium leading-snug">{activeTabConfig.description}</p>
+            </div>
+          </div>
+
+          {/* Clickable Next Button (chevron right) beside the card */}
+          <button 
+            onClick={() => {
+              const tabKeys = tabs.map((t) => t.key);
+              const nextIdx = (tabKeys.indexOf(activeTab) + 1) % tabKeys.length;
+              setActiveTab(tabKeys[nextIdx]);
+              setAutoPlay(false);
+            }}
+            className="flex items-center justify-center w-11 h-11 rounded-xl bg-white border border-indigo-200 shadow-md text-indigo-600 active:scale-95 transition-all hover:bg-white/80 flex-shrink-0 cursor-pointer"
+            aria-label="Next Category"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* ─── Cards Grid ─── */}
         <div className="min-h-[250px] md:min-h-[280px]">

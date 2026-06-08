@@ -57,8 +57,8 @@
   --background: #e2e8f7;
   --foreground: #020617;
   --text-primary: #000000;
-  --text-secondary: #0f172a;
-  --text-muted: #334155;
+  --text-secondary: #000000;
+  --text-muted: #000000;
   --dark-ui: #0f172a;
   --dark-ui-2: #1e293b;
   --border-soft: rgba(99, 102, 241, 0.15);
@@ -218,18 +218,18 @@ body {
 html {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
-  font-size: 75%;
+  font-size: 90%;
 }
 
 @media (min-width: 768px) {
   html {
-    font-size: 77.5%;
+    font-size: 93%;
   }
 }
 
 @media (min-width: 1280px) {
   html {
-    font-size: 80%;
+    font-size: 96%;
   }
 }
 
@@ -865,3 +865,43 @@ mark {
     height: 38vh !important;
   }
 }
+
+/* ========== RESPONSIVE MOBILE NAVIGATION & SCROLLBAR HIDING ========== */
+
+@media (max-width: 1023px) {
+  .sidebar-nav-container {
+    display: none !important;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari, and Opera */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge, and Firefox */
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Ensure high contrast on body text and non-gradient headers while preserving gradients */
+p:not(.text-transparent):not(.bg-clip-text),
+span:not(.text-transparent):not(.bg-clip-text):not(.text-gradient-accent):not(.bg-gradient-to-r),
+li:not(.text-transparent):not(.bg-clip-text),
+label:not(.text-transparent),
+a:not(.text-transparent):not(.bg-clip-text),
+button:not(.text-transparent):not(.bg-clip-text) {
+  color: #0c0f1d !important;
+  opacity: 1 !important;
+}
+
+h1:not(.text-transparent):not(.bg-clip-text),
+h2:not(.text-transparent):not(.bg-clip-text),
+h3:not(.text-transparent):not(.bg-clip-text),
+h4:not(.text-transparent):not(.bg-clip-text),
+h5:not(.text-transparent):not(.bg-clip-text),
+h6:not(.text-transparent):not(.bg-clip-text) {
+  color: #050711 !important;
+  opacity: 1 !important;
+}
+

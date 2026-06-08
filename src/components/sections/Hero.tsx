@@ -398,7 +398,7 @@ export default function Hero() {
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute top-6 left-6 md:top-8 md:left-8 z-30"
+        className="absolute top-6 left-6 md:top-8 md:left-8 lg:hidden z-30"
       >
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-36 md:h-36">
           {/* Static iridescent gradient clipped to circle */}
