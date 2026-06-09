@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { CinematicContainer, CinematicFragment } from '@/components/shared/animations/CinematicReveal';
 import SectionTag from '@/components/shared/SectionTag';
 import { ArrowRight, Globe, BrainCircuit, Wallet, HelpCircle, Rocket, ShieldCheck, Clock, Users, Code2, Bot, Settings, Headphones, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -259,41 +260,34 @@ export default function Challenges() {
     <section ref={ref} className="section-anchor bg-transparent py-6 md:py-12 lg:py-16" id="challenges">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         {/* Section Header */}
-        <div className="text-center mb-8 md:mb-12">
-          <SectionTag text="THE CHALLENGE" variant="light" className="justify-center" />
+        <CinematicContainer className="text-center mb-8 md:mb-12">
+          <CinematicFragment direction="top">
+            <SectionTag text="THE CHALLENGE" variant="light" className="justify-center" />
+          </CinematicFragment>
 
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mt-6 leading-tight tracking-tight"
-          >
-            Use tabs to{' '}
-            <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-2 py-0.5 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
-              explore more
-            </span>
-          </motion.h2>
+          <CinematicFragment direction="bottom" delay={0.1}>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mt-6 leading-tight tracking-tight">
+              Use tabs to{' '}
+              <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-2 py-0.5 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
+                explore more
+              </span>
+            </h2>
+          </CinematicFragment>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ delay: 0.15, duration: 0.7 }}
-            className="text-foreground/60 text-base md:text-lg font-medium max-w-2xl mx-auto mt-4"
-          >
-            Every business faces hurdles. We solve the most common challenges across web, AI, and operations with battle-tested solutions.
-          </motion.p>
-        </div>
+          <CinematicFragment direction="bottom" delay={0.2} intensity="low">
+            <p className="text-foreground/60 text-base md:text-lg font-medium max-w-2xl mx-auto mt-4">
+              Every business faces hurdles. We solve the most common challenges across web, AI, and operations with battle-tested solutions.
+            </p>
+          </CinematicFragment>
+        </CinematicContainer>
 
         {/* Desktop Tab Bar (visible on md+) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ delay: 0.25, duration: 0.7 }}
-          className="hidden md:flex flex-row items-center gap-3 mb-10 w-full"
-        >
-          {tabs.map((tab) => {
-            const TabIcon = tab.icon;
-            const isActive = activeTab === tab.key;
+        <CinematicContainer>
+          <CinematicFragment direction="bottom" delay={0.3} intensity="low">
+            <div className="hidden md:flex flex-row items-center gap-3 mb-10 w-full">
+              {tabs.map((tab) => {
+                const TabIcon = tab.icon;
+                const isActive = activeTab === tab.key;
 
             return (
               <button
@@ -370,7 +364,9 @@ export default function Challenges() {
               </button>
             );
           })}
-        </motion.div>
+            </div>
+          </CinematicFragment>
+        </CinematicContainer>
 
         {/* Mobile Tab Carousel (visible only on mobile/tablet < md) */}
         <div className="flex md:hidden items-center gap-3 mb-8 w-full px-1">
@@ -425,8 +421,9 @@ export default function Challenges() {
         </div>
 
         {/* ─── Cards Grid ─── */}
-        <div className="min-h-[250px] md:min-h-[280px]">
-          <AnimatePresence mode="wait">
+        <CinematicContainer className="min-h-[250px] md:min-h-[280px]">
+          <CinematicFragment direction="bottom" delay={0.4} className="w-full h-full">
+            <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
               initial={{ opacity: 0 }}
@@ -445,23 +442,21 @@ export default function Challenges() {
               ))}
             </motion.div>
           </AnimatePresence>
-        </div>
+        </CinematicFragment>
+        </CinematicContainer>
 
         {/* ─── Explore More CTA ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ delay: 0.5, duration: 0.7 }}
-          className="text-center mt-5 md:mt-10"
-        >
-          <Link
-            href="/contact"
-            className="group inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/40 rounded-full font-semibold text-foreground hover:from-blue-600/[0.15] hover:via-indigo-500/[0.08] transition-all shadow-[0_4px_12px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,1)]"
-          >
+        <CinematicContainer className="text-center mt-5 md:mt-10">
+          <CinematicFragment direction="bottom" delay={0.5}>
+            <Link
+              href="/contact"
+              className="group inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/40 rounded-full font-semibold text-foreground hover:from-blue-600/[0.15] hover:via-indigo-500/[0.08] transition-all shadow-[0_4px_12px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,1)]"
+            >
             Explore All Solutions
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
-        </motion.div>
+          </CinematicFragment>
+        </CinematicContainer>
       </div>
     </section>
   );
