@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { CinematicContainer, CinematicFragment } from '@/components/shared/animations/CinematicReveal';
 import SectionTag from '@/components/shared/SectionTag';
 import { Terminal, ArrowRight, Play, Pause, RotateCcw, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -53,7 +54,6 @@ const PHASES = [
 export default function Solutions() {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(containerRef, { once: true, margin: '-80px' });
   const [activePhaseIndex, setActivePhaseIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
 
@@ -93,40 +93,38 @@ export default function Solutions() {
 
       <div className="w-full max-w-[1200px] mx-auto px-4 md:px-8 lg:px-8 xl:px-12 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-5 md:mb-12">
-          <SectionTag text="INTERACTIVE PIPELINE" variant="light" className="justify-center" />
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-            className="text-3xl md:text-5xl font-extrabold text-foreground mt-2 md:mt-4 tracking-tight leading-tight"
-          >
-            Process Simulation{' '}
-            <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-650 to-violet-600 px-3 py-1 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
-              Console
-            </span>
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.15, duration: 0.6 }}
-            className="text-foreground/60 text-base md:text-lg font-medium max-w-xl mx-auto mt-4"
-          >
-            Bypass the standard black-box agency workflow. Real-time logging of how your projects move from strategy to launch.
-          </motion.p>
-        </div>
+        <CinematicContainer className="text-center mb-5 md:mb-12">
+          <CinematicFragment direction="top">
+            <SectionTag text="INTERACTIVE PIPELINE" variant="light" className="justify-center" />
+          </CinematicFragment>
+          <CinematicFragment direction="bottom" delay={0.1}>
+            <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mt-2 md:mt-4 tracking-tight leading-tight">
+              Process Simulation{' '}
+              <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-650 to-violet-600 px-3 py-1 rounded-2xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
+                Console
+              </span>
+            </h2>
+          </CinematicFragment>
+          <CinematicFragment direction="bottom" delay={0.2}>
+            <p className="text-foreground/60 text-base md:text-lg font-medium max-w-xl mx-auto mt-4">
+              Bypass the standard black-box agency workflow. Real-time logging of how your projects move from strategy to launch.
+            </p>
+          </CinematicFragment>
+        </CinematicContainer>
 
         {/* Console Container Card (Same style as Service Bento Cards) */}
-        <motion.div
-          ref={cardRef}
-          onMouseMove={handleMouseMove}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={handleMouseLeave}
-          animate={{ rotateX, rotateY }}
-          transition={{ type: 'spring', stiffness: 220, damping: 25 }}
-          className="relative overflow-hidden rounded-[2.5rem] backdrop-blur-2xl border border-indigo-300/30 ring-1 ring-indigo-400/10 bg-gradient-to-br from-blue-600/[0.03] via-indigo-500/[0.015] to-transparent shadow-[0_12px_40px_rgba(99,102,241,0.06),inset_0_1px_0_rgba(255,255,255,0.45)] hover:border-indigo-300/50 hover:shadow-[0_24px_60px_rgba(99,102,241,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-500 p-4 sm:p-6 md:p-8 lg:p-8 xl:p-10"
-          style={{ transformStyle: 'preserve-3d', perspective: 1500 }}
-        >
+        <CinematicContainer className="w-full">
+          <CinematicFragment direction="deep-space" className="w-full" delay={0.3}>
+            <motion.div
+              ref={cardRef}
+              onMouseMove={handleMouseMove}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={handleMouseLeave}
+              animate={{ rotateX, rotateY }}
+              transition={{ type: 'spring', stiffness: 220, damping: 25 }}
+              className="relative overflow-hidden rounded-[2.5rem] backdrop-blur-2xl border border-indigo-300/30 ring-1 ring-indigo-400/10 bg-gradient-to-br from-blue-600/[0.03] via-indigo-500/[0.015] to-transparent shadow-[0_12px_40px_rgba(99,102,241,0.06),inset_0_1px_0_rgba(255,255,255,0.45)] hover:border-indigo-300/50 hover:shadow-[0_24px_60px_rgba(99,102,241,0.1),inset_0_1px_0_rgba(255,255,255,0.6)] transition-all duration-500 p-4 sm:p-6 md:p-8 lg:p-8 xl:p-10"
+              style={{ transformStyle: 'preserve-3d', perspective: 1500 }}
+            >
           {/* Spotlight background overlay */}
           {isHovered && (
             <div
@@ -257,7 +255,9 @@ export default function Solutions() {
             </div>
 
           </div>
-        </motion.div>
+            </motion.div>
+          </CinematicFragment>
+        </CinematicContainer>
       </div>
     </section>
   );

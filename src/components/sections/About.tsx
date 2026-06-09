@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRef, useState } from 'react';
 import {
   Target,
@@ -9,6 +9,7 @@ import {
   Lightbulb,
   ArrowRight,
 } from 'lucide-react';
+import { CinematicContainer, CinematicFragment } from '@/components/shared/animations/CinematicReveal';
 import SectionTag from '@/components/shared/SectionTag';
 import Link from 'next/link';
 
@@ -39,20 +40,7 @@ const benefits = [
   },
 ];
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.15,
-      duration: 0.8,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  }),
-};
-
-function BenefitCard({ benefit, index, isInView }: { benefit: typeof benefits[0]; index: number; isInView: boolean }) {
+function BenefitCard({ benefit, index }: { benefit: typeof benefits[0]; index: number }) {
   const Icon = benefit.icon;
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -70,12 +58,10 @@ function BenefitCard({ benefit, index, isInView }: { benefit: typeof benefits[0]
   ];
 
   return (
-    <motion.div
-      custom={index}
-      variants={cardVariants}
-      initial="hidden"
-      animate={isInView ? 'visible' : 'hidden'}
+    <CinematicFragment
+      direction={index % 2 === 0 ? 'left' : 'right'}
       className={`${positions[index]}`}
+      delay={index * 0.08}
     >
       <div 
         onMouseMove={handleMouseMove}
@@ -115,13 +101,12 @@ function BenefitCard({ benefit, index, isInView }: { benefit: typeof benefits[0]
           </div>
         </div>
       </div>
-    </motion.div>
+    </CinematicFragment>
   );
 }
 
 export default function About() {
   const ref = useRef<HTMLElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
     <section
@@ -135,86 +120,78 @@ export default function About() {
 
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 relative z-10">
         {/* Header */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-8 md:mb-16 lg:mb-20">
+        <CinematicContainer className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-8 md:mb-16 lg:mb-20" staggerChildren={0.12}>
           <div>
-            <SectionTag text="WHY CHOOSE US" variant="light" />
-            <motion.h2
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight tracking-tight"
-            >
-              We don&apos;t just write code. We build{' '}
-              <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-2 py-0.5 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">systems</span>{' '}
-              that scale.
-            </motion.h2>
+            <CinematicFragment direction="left">
+              <SectionTag text="WHY CHOOSE US" variant="light" />
+            </CinematicFragment>
+            <CinematicFragment direction="bottom" delay={0.1}>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight tracking-tight mt-6">
+                We don&apos;t just write code. We build{' '}
+                <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-650 to-violet-600 px-2 py-0.5 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">systems</span>{' '}
+                that scale.
+              </h2>
+            </CinematicFragment>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col justify-end items-start"
-          >
-            <p className="text-foreground/80 text-lg md:text-xl leading-relaxed mb-8">
-              Managed solely by the founder of <strong>Cognisa</strong>, we specialize in delivering high-performance custom web applications and AI-driven automation. We partner closely with businesses to transform manual bottlenecks into scalable, automated tech solutions.
-            </p>
-            <Link
-              href="/about"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/40 rounded-full font-semibold text-foreground hover:from-blue-600/[0.15] hover:via-indigo-500/[0.08] transition-all shadow-[0_4px_12px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,1)] group"
-            >
-              More About Us
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </motion.div>
-        </div>
+          <div className="flex flex-col justify-end items-start">
+            <CinematicFragment direction="right" delay={0.15}>
+              <p className="text-foreground/80 text-lg md:text-xl leading-relaxed mb-8">
+                Managed solely by the founder of <strong>Cognisa</strong>, we specialize in delivering high-performance custom web applications and AI-driven automation. We partner closely with businesses to transform manual bottlenecks into scalable, automated tech solutions.
+              </p>
+            </CinematicFragment>
+            <CinematicFragment direction="right" delay={0.25}>
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/40 rounded-full font-semibold text-foreground hover:from-blue-600/[0.15] hover:via-indigo-500/[0.08] transition-all shadow-[0_4px_12px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,1)] group"
+              >
+                More About Us
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </CinematicFragment>
+          </div>
+        </CinematicContainer>
 
         {/* Orbit Layout */}
         <div className="relative pt-8 md:pt-10 lg:pt-12 pb-10 md:pb-12 lg:pb-14">
           {/* Central Element - Desktop */}
           <div className="hidden lg:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-              className="relative"
-            >
-              {/* Iridescent blob background */}
-              <div className="absolute inset-0 -m-16 iridescent-blob opacity-40 scale-75 blur-sm" />
+            <CinematicFragment direction="scale-up" delay={0.3}>
+              <div className="relative">
+                {/* Iridescent blob background */}
+                <div className="absolute inset-0 -m-16 iridescent-blob opacity-40 scale-75 blur-sm" />
 
-              {/* Central glass circle with holographic core */}
-              <div className="relative w-40 h-40 rounded-full glass-surface-strong border border-indigo-300/40 flex flex-col items-center justify-center shadow-[0_16px_48px_rgba(99,102,241,0.15)] overflow-hidden group">
-                {/* Rotating holographic background glow */}
-                <div 
-                  className="absolute inset-0 bg-gradient-to-tr from-[#38bdf8]/15 via-[#6366f1]/20 to-[#c084fc]/15 opacity-60 group-hover:opacity-80 transition-all duration-1000 animate-spin" 
-                  style={{ animationDuration: '10s' }} 
-                />
-                
-                {/* Glow ring */}
-                <div className="absolute inset-1 rounded-full border border-indigo-500/10 shadow-[inset_0_0_15px_rgba(99,102,241,0.1)] pointer-events-none" />
+                {/* Central glass circle with holographic core */}
+                <div className="relative w-40 h-40 rounded-full glass-surface-strong border border-indigo-300/40 flex flex-col items-center justify-center shadow-[0_16px_48px_rgba(99,102,241,0.15)] overflow-hidden group">
+                  {/* Rotating holographic background glow */}
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-tr from-[#38bdf8]/15 via-[#6366f1]/20 to-[#c084fc]/15 opacity-60 group-hover:opacity-80 transition-all duration-1000 animate-spin" 
+                    style={{ animationDuration: '10s' }} 
+                  />
+                  
+                  {/* Glow ring */}
+                  <div className="absolute inset-1 rounded-full border border-indigo-500/10 shadow-[inset_0_0_15px_rgba(99,102,241,0.1)] pointer-events-none" />
 
-                <span className="relative z-10 text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-600 drop-shadow-sm font-sans tracking-tight">
-                  Cognisa
-                </span>
-                <span className="relative z-10 text-[10px] font-mono text-foreground/45 uppercase tracking-wider mt-1">
-                  Est. 2020
-                </span>
-                <span className="relative z-10 text-[9px] font-mono text-foreground/35 mt-0.5">
-                  New York, NY
-                </span>
+                  <span className="relative z-10 text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-600 drop-shadow-sm font-sans tracking-tight">
+                    Cognisa
+                  </span>
+                  <span className="relative z-10 text-[10px] font-mono text-foreground/45 uppercase tracking-wider mt-1">
+                    Est. 2020
+                  </span>
+                  <span className="relative z-10 text-[9px] font-mono text-foreground/35 mt-0.5">
+                    New York, NY
+                  </span>
+                </div>
               </div>
-            </motion.div>
+            </CinematicFragment>
           </div>
 
           {/* Benefit Cards - Diamond Layout on Desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-x-8 lg:gap-y-6 lg:px-24 mt-8 md:mt-10 lg:mt-14 pb-6 md:pb-8 lg:pb-10">
+          <CinematicContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-x-8 lg:gap-y-6 lg:px-24 mt-8 md:mt-10 lg:mt-14 pb-6 md:pb-8 lg:pb-10" delayChildren={0.3} staggerChildren={0.1}>
             {benefits.map((benefit, i) => (
-              <BenefitCard key={benefit.title} benefit={benefit} index={i} isInView={isInView} />
+              <BenefitCard key={benefit.title} benefit={benefit} index={i} />
             ))}
-          </div>
+          </CinematicContainer>
         </div>
       </div>
     </section>

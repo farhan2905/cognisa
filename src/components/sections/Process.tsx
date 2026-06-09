@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import { CinematicContainer, CinematicFragment } from '@/components/shared/animations/CinematicReveal';
 import SectionTag from '@/components/shared/SectionTag';
 import { ArrowUpRight, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -79,20 +80,18 @@ export default function Process() {
             className="absolute bottom-[10%] right-[10%] translate-x-1/4 translate-y-1/4 w-[70vw] h-[70vw] md:w-[55vw] md:h-[55vw] rounded-full blur-[140px] opacity-[0.20] pointer-events-none" 
           />
         </div>
-        <div className="process-header-container w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 mb-2 mt-1 md:mb-4 md:mt-4 lg:mt-6 flex-shrink-0 flex flex-row items-center md:items-end justify-between gap-3 md:gap-6">
+        <CinematicContainer className="process-header-container w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 mb-2 mt-1 md:mb-4 md:mt-4 lg:mt-6 flex-shrink-0 flex flex-row items-center md:items-end justify-between gap-3 md:gap-6" staggerChildren={0.12}>
           <div>
-            <SectionTag text="OUR WORK" variant="light" />
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }} 
-              whileInView={{ opacity: 1, y: 0 }} 
-              viewport={{ once: true }} 
-              transition={{ duration: 0.6 }} 
-              className="text-xl sm:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-foreground to-foreground/70 leading-tight tracking-tight drop-shadow-sm mt-2 md:mt-4"
-            >
-              Digital <span className="text-gradient-accent drop-shadow-sm">systems</span> built for real businesses.
-            </motion.h2>
+            <CinematicFragment direction="left">
+              <SectionTag text="OUR WORK" variant="light" />
+            </CinematicFragment>
+            <CinematicFragment direction="bottom" delay={0.1}>
+              <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-foreground to-foreground/70 leading-tight tracking-tight drop-shadow-sm mt-2 md:mt-4">
+                Digital <span className="text-gradient-accent drop-shadow-sm">systems</span> built for real businesses.
+              </h2>
+            </CinematicFragment>
           </div>
-          <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3, duration: 0.6 }}>
+          <CinematicFragment direction="right" delay={0.2}>
             <Link 
               href="/work" 
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-blue-600/[0.08] via-indigo-500/[0.04] to-transparent border border-indigo-300/40 rounded-full font-semibold text-foreground hover:from-blue-600/[0.15] hover:via-indigo-500/[0.08] transition-all shadow-[0_4px_12px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,1)] group text-xs md:text-sm"
@@ -100,14 +99,22 @@ export default function Process() {
               View All Work
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </Link>
-          </motion.div>
-        </div>
+          </CinematicFragment>
+        </CinematicContainer>
 
-        <motion.div ref={containerRef} style={{ x }} className="self-start flex gap-6 md:gap-12 lg:gap-16 xl:gap-20 px-4 md:px-12 lg:px-20 w-fit pb-4 items-center">
-          {works.map((work, idx) => (
-            <WorkCard key={work.number} work={work} index={idx} total={works.length} />
-          ))}
-        </motion.div>
+        <CinematicContainer className="self-start w-fit pb-4" delayChildren={0.25} staggerChildren={0.1}>
+          <motion.div ref={containerRef} style={{ x }} className="flex gap-6 md:gap-12 lg:gap-16 xl:gap-20 px-4 md:px-12 lg:px-20 items-center">
+            {works.map((work, idx) => (
+              <CinematicFragment 
+                key={work.number} 
+                direction={idx === 0 ? 'left' : idx === works.length - 1 ? 'right' : 'bottom'}
+                className="flex-shrink-0"
+              >
+                <WorkCard work={work} index={idx} total={works.length} />
+              </CinematicFragment>
+            ))}
+          </motion.div>
+        </CinematicContainer>
       </div>
     </section>
   );

@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { motion, useInView, useMotionValue, useTransform, animate } from 'framer-motion';
+import { CinematicContainer, CinematicFragment } from '@/components/shared/animations/CinematicReveal';
 import RadarScanner from '@/components/shared/RadarScanner';
 
 const stats = [
@@ -143,11 +144,6 @@ function MicroChart({ type, bars, dots, ticks, inView }: {
   return null;
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] } }),
-};
-
 function StatCard({ stat, index, isInView }: { stat: typeof stats[0]; index: number; isInView: boolean }) {
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
@@ -158,47 +154,49 @@ function StatCard({ stat, index, isInView }: { stat: typeof stats[0]; index: num
   };
 
   return (
-    <motion.div
-      custom={index}
-      variants={cardVariants}
-      initial="hidden"
-      animate={isInView ? 'visible' : 'hidden'}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="text-center relative overflow-hidden bg-gradient-to-br from-blue-600/[0.03] via-indigo-500/[0.015] to-transparent backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-indigo-300/20 ring-1 ring-indigo-400/10 group transition-all duration-500 hover:border-indigo-300/40"
+    <CinematicFragment
+      direction="bottom"
+      delay={index * 0.08}
+      className="w-full"
     >
-      {/* Spotlight overlay */}
-      {isHovered && (
-        <div
-          className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-0"
-          style={{
-            background: `radial-gradient(200px circle at ${coords.x}px ${coords.y}px, rgba(99, 102, 241, 0.06), transparent 80%)`,
-          }}
-        />
-      )}
+      <div 
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="text-center relative overflow-hidden bg-gradient-to-br from-blue-600/[0.03] via-indigo-500/[0.015] to-transparent backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-indigo-300/20 ring-1 ring-indigo-400/10 group transition-all duration-500 hover:border-indigo-300/40"
+      >
+        {/* Spotlight overlay */}
+        {isHovered && (
+          <div
+            className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-0"
+            style={{
+              background: `radial-gradient(200px circle at ${coords.x}px ${coords.y}px, rgba(99, 102, 241, 0.06), transparent 80%)`,
+            }}
+          />
+        )}
 
-      {/* Subtle light sweep */}
-      <div className="absolute top-0 left-[-100%] w-[50%] h-[200%] bg-gradient-to-r from-transparent via-white/10 to-transparent rotate-[30deg] opacity-0 group-hover:opacity-100 group-hover:left-[200%] transition-all duration-1000 pointer-events-none z-0" />
+        {/* Subtle light sweep */}
+        <div className="absolute top-0 left-[-100%] w-[50%] h-[200%] bg-gradient-to-r from-transparent via-white/10 to-transparent rotate-[30deg] opacity-0 group-hover:opacity-100 group-hover:left-[200%] transition-all duration-1000 pointer-events-none z-0" />
 
-      <div className="relative z-10">
-        <AnimatedCounter value={stat.value} suffix={stat.suffix} inView={isInView} />
-        <p className="text-foreground/55 text-sm mt-3 font-medium">{stat.label}</p>
-        <MicroChart
-          type={stat.type}
-          bars={stat.bars}
-          dots={stat.dots}
-          ticks={stat.ticks}
-          inView={isInView}
-        />
-        {/* Hover tooltip */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <span className="text-[9px] font-mono text-indigo-400/60 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-md border border-indigo-300/30">
-            Updated 2m ago
-          </span>
+        <div className="relative z-10">
+          <AnimatedCounter value={stat.value} suffix={stat.suffix} inView={isInView} />
+          <p className="text-foreground/55 text-sm mt-3 font-medium">{stat.label}</p>
+          <MicroChart
+            type={stat.type}
+            bars={stat.bars}
+            dots={stat.dots}
+            ticks={stat.ticks}
+            inView={isInView}
+          />
+          {/* Hover tooltip */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="text-[9px] font-mono text-indigo-400/60 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-md border border-indigo-300/30">
+              Updated 2m ago
+            </span>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </CinematicFragment>
   );
 }
 
@@ -227,54 +225,56 @@ export default function Stats() {
         <RadarScanner className="w-full h-full" />
       </div>
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8 md:mb-16"
-        >
-          <div className="inline-flex items-center gap-4 px-6 py-3 rounded-2xl border backdrop-blur-[100px] bg-gradient-to-r from-white/8 via-white/4 to-white/2 border-indigo-300/40 hover:border-white/35 shadow-[inset_0_2px_2px_rgba(255,255,255,0.3),0_8px_24px_rgba(31,38,135,0.1)] mb-6 group">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            </span>
-            <span className="text-sm md:text-base font-mono uppercase tracking-[0.2em] font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400">
-              The Numbers
-            </span>
-            <span className="h-1 w-12 md:w-16 rounded-full bg-gradient-to-r from-indigo-400/60 to-transparent" />
-          </div>
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
-            Results that <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 px-2 py-0.5 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">speak</span> for themselves
-          </h2>
-        </motion.div>
+        <CinematicContainer className="text-center mb-8 md:mb-16">
+          <CinematicFragment direction="top">
+            <div className="inline-flex items-center gap-4 px-6 py-3 rounded-2xl border backdrop-blur-[100px] bg-gradient-to-r from-white/8 via-white/4 to-white/2 border-indigo-300/40 hover:border-white/35 shadow-[inset_0_2px_2px_rgba(255,255,255,0.3),0_8px_24px_rgba(31,38,135,0.1)] mb-6 group">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              </span>
+              <span className="text-sm md:text-base font-mono uppercase tracking-[0.2em] font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400">
+                The Numbers
+              </span>
+              <span className="h-1 w-12 md:w-16 rounded-full bg-gradient-to-r from-indigo-400/60 to-transparent" />
+            </div>
+          </CinematicFragment>
+          <CinematicFragment direction="bottom" delay={0.1}>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
+              Results that <span className="bg-indigo-500/10 border border-indigo-300/40 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-650 to-violet-600 px-2 py-0.5 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">speak</span> for themselves
+            </h2>
+          </CinematicFragment>
+        </CinematicContainer>
 
         {/* Dashboard Panel */}
-        <div className="glass-surface-strong rounded-[2.5rem] p-6 md:p-10 border border-indigo-300/40 ring-1 ring-indigo-400/15 shadow-[0_16px_48px_rgba(59,130,246,0.12),inset_0_1px_0_rgba(255,255,255,0.45)]">
-          {/* Panel Header */}
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-indigo-300/20">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-60" />
+        <CinematicContainer className="w-full">
+          <CinematicFragment direction="deep-space" className="w-full" delay={0.2}>
+            <div className="glass-surface-strong rounded-[2.5rem] p-6 md:p-10 border border-indigo-300/40 ring-1 ring-indigo-400/15 shadow-[0_16px_48px_rgba(59,130,246,0.12),inset_0_1px_0_rgba(255,255,255,0.45)]">
+              {/* Panel Header */}
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-indigo-300/20">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-60" />
+                  </div>
+                  <span className="text-[10px] font-mono text-foreground/45 uppercase tracking-wider">Live Dashboard</span>
+                </div>
+                <motion.span
+                  className="text-[10px] font-mono text-foreground/30 tabular-nums"
+                  animate={pulse ? { opacity: [0.3, 1, 0.3] } : {}}
+                  transition={{ duration: 0.3 }}
+                >
+                  Updated: {timestamp} UTC
+                </motion.span>
               </div>
-              <span className="text-[10px] font-mono text-foreground/40 uppercase tracking-wider">Live Dashboard</span>
-            </div>
-            <motion.span
-              className="text-[10px] font-mono text-foreground/30 tabular-nums"
-              animate={pulse ? { opacity: [0.3, 1, 0.3] } : {}}
-              transition={{ duration: 0.3 }}
-            >
-              Updated: {timestamp} UTC
-            </motion.span>
-          </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {stats.map((stat, i) => (
-              <StatCard key={stat.label} stat={stat} index={i} isInView={isInView} />
-            ))}
-          </div>
-        </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                {stats.map((stat, i) => (
+                  <StatCard key={stat.label} stat={stat} index={i} isInView={isInView} />
+                ))}
+              </div>
+            </div>
+          </CinematicFragment>
+        </CinematicContainer>
       </div>
     </section>
   );
