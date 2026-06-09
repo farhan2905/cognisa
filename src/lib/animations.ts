@@ -1,7 +1,7 @@
 export const CINEMATIC_EASE = [0.16, 1, 0.3, 1]; // Heavy ease-out for dramatic effect
 
-export const DESKTOP_DURATION = 1.2;
-export const MOBILE_DURATION = 0.6;
+export const DESKTOP_DURATION = 1.44; // slowed down by 20% (1.2 * 1.2)
+export const MOBILE_DURATION = 0.72;  // slowed down by 20% (0.6 * 1.2)
 
 export const DESKTOP_OFFSET_HIGH = 180;
 export const DESKTOP_OFFSET_MEDIUM = 80;
