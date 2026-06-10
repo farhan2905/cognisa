@@ -103,7 +103,7 @@ export default function Services() {
   };
 
   return (
-    <section id="services" ref={containerRef} className="section-anchor relative h-[360vh] md:h-[400vh] bg-transparent">
+    <section id="services" ref={containerRef} className="section-anchor relative h-[360vh] md:h-[400vh] bg-transparent z-[20]">
       {/* Sticky visible area */}
       <div className="services-sticky-container sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-start lg:justify-start xl:justify-center items-center pt-6 pb-6 md:pt-20 md:pb-10 lg:pt-6 xl:pt-0 z-10">
         

@@ -209,7 +209,7 @@ export default function FAQ() {
   };
 
   return (
-    <section ref={ref} className="section-anchor bg-transparent py-8 md:py-12 lg:py-16" id="faq">
+    <section ref={ref} className="section-anchor bg-transparent py-8 md:py-12 lg:py-16 z-[40]" id="faq">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <div className="text-center mb-8 md:mb-12">
           <SectionTag text="FAQ" variant="light" className="justify-center" />

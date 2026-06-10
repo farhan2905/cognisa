@@ -21,7 +21,7 @@ export default function CTA() {
   };
 
   return (
-    <section id="cta" className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden">
+    <section id="cta" className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden z-[40]">
       <div className="noise-overlay absolute inset-0 z-[1]" />
       <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-200 rounded-full blur-[150px] opacity-[0.10] animate-orb-1" />
       <div className="absolute bottom-0 right-1/4 w-[350px] h-[350px] bg-violet-200 rounded-full blur-[150px] opacity-[0.08] animate-orb-2" />

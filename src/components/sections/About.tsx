@@ -112,7 +112,7 @@ export default function About() {
     <section
       id="about"
       ref={ref}
-      className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden"
+      className="section-anchor relative bg-transparent pt-8 pb-2 md:pt-12 md:pb-2 lg:pt-16 lg:pb-2 overflow-hidden z-[15]"
     >
       {/* Dynamic Background Gradients */}
       <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-indigo-200/50 rounded-full blur-[120px] pointer-events-none animate-orb-2" />
@@ -153,7 +153,7 @@ export default function About() {
         </CinematicContainer>
 
         {/* Orbit Layout */}
-        <div className="relative pt-8 md:pt-10 lg:pt-12 pb-10 md:pb-12 lg:pb-14">
+        <div className="relative pt-8 md:pt-10 lg:pt-12 pb-0">
           {/* Central Element - Desktop */}
           <div className="hidden lg:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
             <CinematicFragment direction="scale-up" delay={0.3}>
@@ -187,7 +187,7 @@ export default function About() {
           </div>
 
           {/* Benefit Cards - Diamond Layout on Desktop */}
-          <CinematicContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-x-8 lg:gap-y-6 lg:px-24 mt-8 md:mt-10 lg:mt-14 pb-6 md:pb-8 lg:pb-10" delayChildren={0.3} staggerChildren={0.1}>
+          <CinematicContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 lg:gap-x-8 lg:gap-y-6 lg:px-24 mt-8 md:mt-10 lg:mt-14 pb-4" delayChildren={0.3} staggerChildren={0.1}>
             {benefits.map((benefit, i) => (
               <BenefitCard key={benefit.title} benefit={benefit} index={i} />
             ))}

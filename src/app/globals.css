@@ -735,53 +735,137 @@ mark {
 
 /* Base font-size uses browser default (16px) for correct rem scaling at any zoom level */
 
-/* ========== RESPONSIVE HEIGHT OPTIMIZATIONS FOR SERVICES STICKY CONTAINER ========== */
+/* ========== RESPONSIVE HEIGHT OPTIMIZATIONS FOR HERO & SERVICES SECTIONS ========== */
 
-/* For viewports with height less than 800px */
-@media (max-height: 800px) and (min-width: 1024px) {
-  /* Prevent vertical centering overlap by pushing to flex-start */
-  .services-sticky-container {
-    justify-content: flex-start !important;
-    padding-top: 1.5rem !important;
+/* Hero height-based scaling for laptop displays */
+@media (max-height: 920px) and (min-width: 1024px) {
+  #hero {
+    min-height: 0 !important;
+    height: 100vh !important;
   }
   
-  /* Scale down the header container bottom margin */
-  .services-header-container {
+  /* Scale down large margins */
+  #hero .mb-12, 
+  #hero .md:mb-12 {
+    margin-bottom: 1rem !important;
+  }
+  #hero .mb-16, 
+  #hero .md:mb-16 {
+    margin-bottom: 1.75rem !important;
+  }
+  #hero .mb-6, 
+  #hero .md:mb-6 {
     margin-bottom: 0.5rem !important;
   }
   
-  /* Scale down the header heading size and margins */
+  /* Scale down hero font sizes */
+  #hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem) !important;
+    line-height: 1.1 !important;
+  }
+  #hero p.text-base {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 1.25rem !important;
+  }
+}
+
+@media (max-height: 780px) and (min-width: 1024px) {
+  #hero {
+    padding-top: 6.5rem !important;
+  }
+  
+  #hero .mb-12, 
+  #hero .md:mb-12 {
+    margin-bottom: 0.5rem !important;
+  }
+  #hero .mb-16, 
+  #hero .md:mb-16 {
+    margin-bottom: 1rem !important;
+  }
+  
+  #hero h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem) !important;
+  }
+  
+  #hero p.text-base {
+    font-size: 0.88rem !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* Services height-based scaling for laptop displays */
+@media (max-height: 960px) and (min-width: 1024px) {
+  /* Prevent vertical centering from pushing header off-screen on laptops */
+  .services-sticky-container {
+    justify-content: flex-start !important;
+    padding-top: 3.5rem !important;
+  }
+  
+  /* Reduce margins and header text sizes */
+  .services-header-container {
+    margin-bottom: 0.75rem !important;
+  }
+  
   .services-header-title {
-    font-size: 2rem !important; /* text-3xl */
-    line-height: 2.25rem !important;
+    font-size: 2.5rem !important; /* scaled down from 6xl */
+    line-height: 2.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .services-header-desc {
+    font-size: 0.95rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .services-header-btn {
+    padding: 0.5rem 1.25rem !important;
+  }
+  
+  /* Scale down card height */
+  .services-card-container {
+    height: 32rem !important; /* scaled down from 37rem */
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .services-card-content {
+    padding: 1.5rem !important;
+    gap: 2rem !important;
+  }
+}
+
+/* Tighter rules for viewports with height less than 800px */
+@media (max-height: 800px) and (min-width: 1024px) {
+  .services-sticky-container {
+    padding-top: 2rem !important;
+  }
+  
+  .services-header-title {
+    font-size: 1.85rem !important; /* text-3xl */
+    line-height: 2.1rem !important;
     margin-bottom: 0.25rem !important;
   }
   
-  /* Hide the paragraph description and CTA button in the header */
+  /* Hide details for extra space on short screens */
   .services-header-desc,
   .services-header-btn {
     display: none !important;
   }
   
-  /* Scale down card height */
   .services-card-container {
-    height: 30rem !important; /* ~384px */
-    margin-bottom: 0.5rem !important;
+    height: 28rem !important; /* scaled down further */
+    margin-bottom: 0.25rem !important;
   }
   
-  /* Hide arched pagination numbers and reduce height on short viewports */
-  .services-pagination-container > div:first-child {
-    display: none !important;
-  }
   .services-pagination-container {
     height: 30px !important;
     margin-top: 0.25rem !important;
   }
   
-  /* Reduce padding inside cards */
   .services-card-content {
-    padding: 1.25rem !important;
-    gap: 1.5rem !important;
+    padding: 1rem 1.25rem !important;
+    gap: 1rem !important;
   }
 }
 
@@ -792,16 +876,16 @@ mark {
   }
   
   .services-header-title {
-    font-size: 1.6rem !important;
-    line-height: 1.8rem !important;
+    font-size: 1.5rem !important;
+    line-height: 1.7rem !important;
   }
   
   .services-card-container {
-    height: 24rem !important;
+    height: 22rem !important;
   }
   
-  .services-pagination-container {
-    height: 30px !important;
+  .services-card-content {
+    padding: 0.75rem 1rem !important;
   }
 }
 

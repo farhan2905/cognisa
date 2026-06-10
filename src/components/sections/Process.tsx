@@ -62,7 +62,7 @@ export default function Process() {
   const x = useTransform(scrollYProgress, [0, 0.88], xRange);
 
   return (
-    <section id="work" ref={targetRef} className="section-anchor relative h-[340vh] md:h-[400vh] bg-transparent">
+    <section id="work" ref={targetRef} className="section-anchor relative h-[340vh] md:h-[400vh] bg-transparent z-[30]">
       
       <div className="sticky top-0 h-[100vh] flex flex-col justify-start items-center overflow-hidden z-10 pt-6 md:pt-20 lg:pt-6 xl:pt-8">
         

@@ -170,7 +170,7 @@ export default function Testimonials() {
   }, [isInView]);
 
   return (
-    <section id="testimonials" ref={ref} className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden">
+    <section id="testimonials" ref={ref} className="section-anchor relative bg-transparent py-8 md:py-12 lg:py-16 overflow-hidden z-[40]">
       <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
