@@ -13,17 +13,22 @@ import Link from 'next/link';
    ═══════════════════════════════════════════════ */
 
 interface Node {
-  x: number;
-  y: number;
-  baseX: number;
-  baseY: number;
-  vx: number;
-  vy: number;
+  x3d: number;
+  y3d: number;
+  z3d: number;
+  baseX3d: number;
+  baseY3d: number;
+  baseZ3d: number;
   radius: number;
   hue: number;
   phase: number;
   speed: number;
-  layer: number; // 0=core, 1=mid, 2=outer
+  layer: number; // 0=core, 1=shell, 2=ambient
+  
+  // Running coordinates
+  x: number;
+  y: number;
+  z: number;
 }
 
 interface Branch {
@@ -33,111 +38,191 @@ interface Branch {
   opacity: number;
 }
 
+interface Signal {
+  branchIndex: number;
+  progress: number; // 0 to 1
+  speed: number;
+  forward: boolean;
+}
+
+interface Ripple {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  speed: number;
+  opacity: number;
+  hue: number;
+}
+
+interface SignalParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  alpha: number;
+  size: number;
+  hue: number;
+}
+
 function NeuralConstellation() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0, y: 0, active: false });
   const nodesRef = useRef<Node[]>([]);
   const branchesRef = useRef<Branch[]>([]);
-  const frameRef = useRef(0);
+  const signalsRef = useRef<Signal[]>([]);
+  const ripplesRef = useRef<Ripple[]>([]);
+  const signalParticlesRef = useRef<SignalParticle[]>([]);
+  const cameraAngleRef = useRef(0);
+  const isMobileRef = useRef(false);
+  const centerRef = useRef<{ x: number; y: number } | null>(null);
+  const cameraRotationRef = useRef<{ x: number; y: number } | null>(null);
 
   const initNetwork = useCallback((w: number, h: number) => {
+    isMobileRef.current = w < 768;
+    const isMobile = isMobileRef.current;
+
     const nodes: Node[] = [];
     const branches: Branch[] = [];
+    const signals: Signal[] = [];
 
-    // Center of the constellation — offset right like the mockup
-    const cx = w * 0.62;
-    const cy = h * 0.42;
+    // Center of constellation - full bleed layout
+    const cx = w * (isMobile ? 0.5 : 0.74);
+    const cy = h * (isMobile ? 0.45 : 0.48);
+    centerRef.current = { x: cx, y: cy };
 
-    // Core nodes — the central "synapse" cluster
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.3;
-      const dist = 15 + Math.random() * 35;
-      nodes.push({
-        x: cx + Math.cos(angle) * dist,
-        y: cy + Math.sin(angle) * dist,
-        baseX: cx + Math.cos(angle) * dist,
-        baseY: cy + Math.sin(angle) * dist,
-        vx: 0, vy: 0,
-        radius: 4 + Math.random() * 3,
-        hue: 220 + Math.random() * 15, // bright blue core
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.25 + Math.random() * 0.35,
-        layer: 0,
-      });
-    }
-
-    // Mid-layer nodes — branching dendrites
-    for (let i = 0; i < 22; i++) {
-      const angle = (i / 22) * Math.PI * 2 + Math.random() * 0.4;
-      const dist = 70 + Math.random() * 140;
-      const px = cx + Math.cos(angle) * dist;
-      const py = cy + Math.sin(angle) * dist;
-      nodes.push({
-        x: px, y: py, baseX: px, baseY: py,
-        vx: 0, vy: 0,
-        radius: 2.5 + Math.random() * 2.5,
-        hue: 235 + Math.random() * 35, // indigo-violet
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.18 + Math.random() * 0.28,
-        layer: 1,
-      });
-    }
-
-    // Outer nodes — terminal synaptic endpoints (like the logo's dots)
-    for (let i = 0; i < 35; i++) {
-      const angle = (i / 35) * Math.PI * 2 + Math.random() * 0.5;
-      const dist = 160 + Math.random() * 250;
-      // Bias toward top-right quadrant like the mockup's dendrite spread
-      const bias = (angle > -Math.PI * 0.4 && angle < Math.PI * 0.9) ? 1.35 : 0.75;
-      const px = cx + Math.cos(angle) * dist * bias;
-      const py = cy + Math.sin(angle) * dist * bias;
-      nodes.push({
-        x: px, y: py, baseX: px, baseY: py,
-        vx: 0, vy: 0,
-        radius: 2 + Math.random() * 3.5,
-        hue: 255 + Math.random() * 50, // violet-purple-pink
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.12 + Math.random() * 0.18,
-        layer: 2,
-      });
-    }
-
-    // Build organic branches — connect layers like dendrites
-    const coreCount = 6;
-    const midStart = coreCount;
-    const midEnd = midStart + 22;
-    const outerStart = midEnd;
-
-    // Core-to-core connections
+    // Generate 3D Geodesic Brain Sphere
+    // Layer 0: Core Nucleus (Inner sphere)
+    const coreCount = isMobile ? 8 : 16;
+    const coreRadius = isMobile ? 35 : 50;
     for (let i = 0; i < coreCount; i++) {
-      for (let j = i + 1; j < coreCount; j++) {
-        if (Math.random() > 0.25) {
-          branches.push({ from: i, to: j, thickness: 1.5, opacity: 0.3 });
+      const phi = Math.acos(1 - 2 * (i + 0.5) / coreCount);
+      const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+      
+      const x3d = coreRadius * Math.sin(phi) * Math.cos(theta);
+      const y3d = coreRadius * Math.sin(phi) * Math.sin(theta);
+      const z3d = coreRadius * Math.cos(phi);
+      
+      // Warm cores: mix of electric blue and purple
+      const hue = 190 + (i % 3) * 40; 
+      
+      nodes.push({
+        x3d, y3d, z3d,
+        baseX3d: x3d, baseY3d: y3d, baseZ3d: z3d,
+        radius: isMobile ? 3.5 : 5.0,
+        hue,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.18 + Math.random() * 0.12,
+        layer: 0,
+        x: 0, y: 0, z: 0
+      });
+    }
+
+    // Layer 1: Outer Shell (Fibonacci Sphere - geometrically perfect)
+    const shellCount = isMobile ? 32 : 80;
+    const shellRadius = isMobile ? 130 : 220;
+    for (let i = 0; i < shellCount; i++) {
+      const phi = Math.acos(1 - 2 * (i + 0.5) / shellCount);
+      const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+      
+      // Removed random jitter for a perfect high-tech geometric sphere shape
+      const x3d = shellRadius * Math.sin(phi) * Math.cos(theta);
+      const y3d = shellRadius * Math.sin(phi) * Math.sin(theta);
+      const z3d = shellRadius * Math.cos(phi);
+      
+      // Color based on latitude (phi) for a beautiful gradient sweep across the sphere!
+      const hue = 210 + (phi / Math.PI) * 70;
+      
+      nodes.push({
+        x3d, y3d, z3d,
+        baseX3d: x3d, baseY3d: y3d, baseZ3d: z3d,
+        radius: 1.8 + Math.random() * 1.5,
+        hue,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.08 + Math.random() * 0.08,
+        layer: 1,
+        x: 0, y: 0, z: 0
+      });
+    }
+
+    // Layer 2: Deep Ambient Space Dust (Background stars)
+    const ambientCount = isMobile ? 15 : 45;
+    for (let i = 0; i < ambientCount; i++) {
+      const x3d = (Math.random() - 0.5) * w * 1.6;
+      const y3d = (Math.random() - 0.5) * h * 1.6;
+      const z3d = (Math.random() - 0.5) * 400 - 200; // deeply recessed
+      
+      nodes.push({
+        x3d, y3d, z3d,
+        baseX3d: x3d, baseY3d: y3d, baseZ3d: z3d,
+        radius: 0.6 + Math.random() * 0.8,
+        hue: 195 + Math.random() * 60,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.03 + Math.random() * 0.04,
+        layer: 2,
+        x: 0, y: 0, z: 0
+      });
+    }
+
+    // Create 3D Mesh Connections
+    // Connect each node to nearest neighbors in its own layer, and core to shell bridges
+    for (let i = 0; i < nodes.length; i++) {
+      const n1 = nodes[i];
+      if (n1.layer === 2) continue; // Ambient space dust has no connection lines
+      
+      const distances: { idx: number; dist: number }[] = [];
+      for (let j = 0; j < nodes.length; j++) {
+        if (i === j) continue;
+        const n2 = nodes[j];
+        if (n2.layer === 2) continue;
+        
+        const dist = Math.hypot(n1.x3d - n2.x3d, n1.y3d - n2.y3d, n1.z3d - n2.z3d);
+        distances.push({ idx: j, dist });
+      }
+      
+      distances.sort((a, b) => a.dist - b.dist);
+      
+      const connectionsCount = n1.layer === 0 ? 3 : 2;
+      let connected = 0;
+      
+      for (let c = 0; c < distances.length && connected < connectionsCount; c++) {
+        const neighborIdx = distances[c].idx;
+        const neighbor = nodes[neighborIdx];
+        
+        const exists = branches.some(b => (b.from === i && b.to === neighborIdx) || (b.from === neighborIdx && b.to === i));
+        if (!exists) {
+          const isCoreToCore = n1.layer === 0 && neighbor.layer === 0;
+          const isCoreToShell = (n1.layer === 0 && neighbor.layer === 1) || (n1.layer === 1 && neighbor.layer === 0);
+          
+          branches.push({
+            from: i,
+            to: neighborIdx,
+            thickness: isCoreToCore ? 1.8 : isCoreToShell ? 0.7 : 0.9,
+            opacity: isCoreToCore ? 0.65 : isCoreToShell ? 0.34 : 0.42
+          });
+          connected++;
         }
       }
     }
 
-    // Core-to-mid connections (main dendrite branches)
-    for (let i = midStart; i < midEnd; i++) {
-      const closest = findClosest(nodes[i], nodes.slice(0, coreCount));
-      branches.push({ from: closest, to: i, thickness: 1.0, opacity: 0.22 });
-      // Cross-connections between mid-layer nodes
-      if (Math.random() > 0.55) {
-        const other = midStart + Math.floor(Math.random() * 22);
-        if (other !== i) {
-          branches.push({ from: i, to: other, thickness: 0.6, opacity: 0.1 });
-        }
+    // Initialize light signals crawling over the 3D grid
+    const signalCount = isMobile ? 4 : 12;
+    for (let i = 0; i < signalCount; i++) {
+      if (branches.length > 0) {
+        signals.push({
+          branchIndex: Math.floor(Math.random() * branches.length),
+          progress: Math.random(),
+          speed: 0.004 + Math.random() * 0.006,
+          forward: Math.random() > 0.5
+        });
       }
-    }
-
-    // Mid-to-outer connections (terminal dendrites)
-    for (let i = outerStart; i < nodes.length; i++) {
-      const closest = findClosest(nodes[i], nodes.slice(midStart, midEnd)) + midStart;
-      branches.push({ from: closest, to: i, thickness: 0.5, opacity: 0.15 });
     }
 
     nodesRef.current = nodes;
     branchesRef.current = branches;
+    signalsRef.current = signals;
+    ripplesRef.current = [];
+    signalParticlesRef.current = [];
   }, []);
 
   useEffect(() => {
@@ -171,6 +256,49 @@ function NeuralConstellation() {
       mouseRef.current.active = false;
     };
 
+    const handleMouseDown = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      // Spawn energetic ripple
+      ripplesRef.current.push({
+        x: clickX,
+        y: clickY,
+        radius: 0,
+        maxRadius: isMobileRef.current ? 160 : 280,
+        speed: isMobileRef.current ? 4 : 6,
+        opacity: 0.8,
+        hue: 200 + Math.random() * 80,
+      });
+
+      // Sparks signals near click in 3D
+      const nodes = nodesRef.current;
+      const branches = branchesRef.current;
+      const cx = centerRef.current ? centerRef.current.x : (canvas.offsetWidth * (isMobileRef.current ? 0.5 : 0.74));
+      const cy = centerRef.current ? centerRef.current.y : (canvas.offsetHeight * (isMobileRef.current ? 0.45 : 0.48));
+
+      nodes.forEach((node, nodeIdx) => {
+        // Project to 3D center at z=0 for checking click proximity
+        const dist = Math.hypot(node.x - (clickX - cx), node.y - (clickY - cy));
+        if (dist < 140 && Math.random() > 0.35) {
+          const connected = branches
+            .map((b, idx) => ({ ...b, idx }))
+            .filter(b => b.from === nodeIdx || b.to === nodeIdx);
+          
+          if (connected.length > 0) {
+            const randomBranch = connected[Math.floor(Math.random() * connected.length)];
+            signalsRef.current.push({
+              branchIndex: randomBranch.idx,
+              progress: 0,
+              speed: 0.005 + Math.random() * 0.008,
+              forward: randomBranch.from === nodeIdx,
+            });
+          }
+        }
+      });
+    };
+
     const draw = (time: number) => {
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
@@ -178,86 +306,784 @@ function NeuralConstellation() {
 
       const nodes = nodesRef.current;
       const branches = branchesRef.current;
+      const signals = signalsRef.current;
+      const ripples = ripplesRef.current;
+      const particles = signalParticlesRef.current;
+      const isMobile = isMobileRef.current;
       const t = time * 0.001;
 
-      // Animate nodes — gentle organic drift
+      // Slow 3D camera drift angle
+      cameraAngleRef.current += isMobile ? 0.0001 : 0.0002;
+      const angle = cameraAngleRef.current;
+      
+      const baseCx = w * (isMobile ? 0.5 : 0.74);
+      const baseCy = h * (isMobile ? 0.45 : 0.48);
+
+      if (!centerRef.current) {
+        centerRef.current = { x: baseCx, y: baseCy };
+      }
+
+      // Proximity check: hover/interaction is only active when the cursor is physically on/near the globe center
+      const distToCenter = Math.hypot(mouseRef.current.x - centerRef.current.x, mouseRef.current.y - centerRef.current.y);
+      const maxInteractRadius = isMobile ? 180 : 320; // 320px interaction boundary around the globe
+      const hoverActive = mouseRef.current.active && distToCenter < maxInteractRadius;
+
+      // Smoothly guide target center toward mouse/hover/click position if hover is active
+      let targetCx = baseCx;
+      let targetCy = baseCy;
+
+      if (hoverActive) {
+        // Clamp ranges to prevent overlay issues with text on the left, but allow high interactivity
+        const maxOffsetLeft = isMobile ? w * 0.5 : w * 0.22;
+        const maxOffsetRight = isMobile ? w * 0.5 : w * 0.22;
+        const rawOffset = mouseRef.current.x - baseCx;
+        const clampedOffsetX = Math.max(-maxOffsetLeft, Math.min(maxOffsetRight, rawOffset));
+        
+        targetCx = baseCx + clampedOffsetX;
+        targetCy = Math.max(h * 0.2, Math.min(h * 0.8, mouseRef.current.y));
+      }
+
+      // Smooth interpolation for butter-glide following (decreased to 0.022 for extra slow fluid momentum)
+      centerRef.current.x += (targetCx - centerRef.current.x) * 0.022;
+      centerRef.current.y += (targetCy - centerRef.current.y) * 0.022;
+
+      const cx = centerRef.current.x;
+      const cy = centerRef.current.y;
+
+      // Update custom properties for dynamic gradient masking
+      canvas.style.setProperty('--mask-x', `${(cx / w) * 100}%`);
+      canvas.style.setProperty('--mask-y', `${(cy / h) * 100}%`);
+
+      // Eased camera rotation angles to keep visual rotation changes buttery smooth
+      const targetRotY = hoverActive ? (mouseRef.current.x - w / 2) * 0.0006 : 0;
+      const targetRotX = hoverActive ? (mouseRef.current.y - h / 2) * 0.0006 : 0;
+
+      if (!cameraRotationRef.current) {
+        cameraRotationRef.current = { x: targetRotX, y: targetRotY };
+      }
+
+      cameraRotationRef.current.x += (targetRotX - cameraRotationRef.current.x) * 0.035; // slow inertia
+      cameraRotationRef.current.y += (targetRotY - cameraRotationRef.current.y) * 0.035;
+
+      const angleY = t * 0.12 + cameraRotationRef.current.y;
+      const angleX = t * 0.06 + cameraRotationRef.current.x;
+      
+      const cosY = Math.cos(angleY);
+      const sinY = Math.sin(angleY);
+      const cosX = Math.cos(angleX);
+      const sinX = Math.sin(angleX);
+      
+      const fov = 350;
+
+      // Setup global main-sphere parallax parameters to prevent inner/outer layer sliding
+      let mainParallaxX = 0;
+      let mainParallaxY = 0;
+      if (hoverActive) {
+        const mdx = mouseRef.current.x - w / 2;
+        const mdy = mouseRef.current.y - h / 2;
+        mainParallaxX = -mdx * 0.04;
+        mainParallaxY = -mdy * 0.04;
+      }
+
+      // Update node drift physics + 3D rotation + parallax + ripple responses
       nodes.forEach((node) => {
         const drift = Math.sin(t * node.speed + node.phase);
-        const driftY = Math.cos(t * node.speed * 0.7 + node.phase + 1);
-        const amplitude = node.layer === 0 ? 3 : node.layer === 1 ? 6 : 10;
+        const driftY = Math.cos(t * node.speed * 0.8 + node.phase + 1);
+        
+        // Reduced core & shell drift amplitude to keep geometric sphere and dial structure extremely clean
+        const amplitude = (node.layer === 0 ? 1.5 : node.layer === 1 ? 6.0 : 24.0);
 
-        node.x = node.baseX + drift * amplitude;
-        node.y = node.baseY + driftY * amplitude * 0.8;
+        let curX = node.baseX3d + drift * amplitude;
+        let curY = node.baseY3d + driftY * amplitude * 0.8;
+        let curZ = node.baseZ3d;
 
-        // Mouse interaction — nodes are attracted toward cursor
-        if (mouseRef.current.active) {
-          const dx = mouseRef.current.x - node.x;
-          const dy = mouseRef.current.y - node.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 280) {
-            const force = (1 - dist / 280) * 0.2;
-            node.x += dx * force * (node.layer === 0 ? 0.2 : 1);
-            node.y += dy * force * (node.layer === 0 ? 0.2 : 1);
+        // Apply Parallax: Layer 0 and 1 are unified at mainParallax to keep them perfectly concentric
+        if (hoverActive) {
+          if (node.layer === 2) {
+            const mdx = mouseRef.current.x - w / 2;
+            const mdy = mouseRef.current.y - h / 2;
+            curX += -mdx * 0.12;
+            curY += -mdy * 0.12;
+          } else {
+            curX += mainParallaxX;
+            curY += mainParallaxY;
           }
         }
+
+        // Apply 3D rotation
+        let x1 = curX * cosY - curZ * sinY;
+        let z1 = curZ * cosY + curX * sinY;
+        
+        let y2 = curY * cosX - z1 * sinX;
+        let z2 = z1 * cosX + curY * sinX;
+
+        // Repulsion from active ripples in projected space
+        ripples.forEach((r) => {
+          const dx = x1 - (r.x - cx);
+          const dy = y2 - (r.y - cy);
+          const dz = z2;
+          const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+          const diff = Math.abs(dist - r.radius);
+          if (diff < 40) {
+            const force = (1 - diff / 40) * 12 * r.opacity;
+            x1 += (dx / dist) * force;
+            y2 += (dy / dist) * force;
+            z2 += (dz / dist) * force;
+          }
+        });
+
+        node.x = x1;
+        node.y = y2;
+        node.z = z2;
       });
 
-      // Draw branches — curved organic lines like dendrites
-      branches.forEach((branch) => {
-        const from = nodes[branch.from];
-        const to = nodes[branch.to];
-        if (!from || !to) return;
+      // Project nodes to 2D screen coordinates
+      const rotatedCoords = nodes.map((node) => {
+        const zDepth = node.z + 280; // offset back in space
+        const scale = fov / Math.max(1, zDepth);
+        return {
+          x: cx + node.x * scale,
+          y: cy + node.y * scale,
+          scale,
+          zDepth
+        };
+      });
 
-        // Pulsing opacity
-        const pulse = 0.5 + 0.5 * Math.sin(t * 1.5 + branch.from * 0.5);
-        const alpha = branch.opacity * (0.6 + 0.4 * pulse);
+      // Draw active ripples
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const r = ripples[i];
+        r.radius += r.speed;
+        r.opacity = 1 - r.radius / r.maxRadius;
+        if (r.opacity <= 0) {
+          ripples.splice(i, 1);
+          continue;
+        }
 
-        // Curved line (quadratic bezier with organic midpoint)
-        const mx = (from.x + to.x) / 2 + Math.sin(t + branch.from) * 8;
-        const my = (from.y + to.y) / 2 + Math.cos(t + branch.to) * 8;
-
-        // Gradient along the branch: blue→purple
-        const grad = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
-        grad.addColorStop(0, `hsla(${from.hue}, 70%, 65%, ${alpha})`);
-        grad.addColorStop(1, `hsla(${to.hue}, 70%, 65%, ${alpha})`);
+        const grad = ctx.createRadialGradient(r.x, r.y, Math.max(0, r.radius - 12), r.x, r.y, r.radius + 4);
+        grad.addColorStop(0, `hsla(${r.hue}, 90%, 70%, 0)`);
+        grad.addColorStop(0.5, `hsla(${r.hue}, 90%, 75%, ${r.opacity * 0.25})`);
+        grad.addColorStop(1, `hsla(${r.hue}, 90%, 70%, 0)`);
 
         ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.quadraticCurveTo(mx, my, to.x, to.y);
+        ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
         ctx.strokeStyle = grad;
-        ctx.lineWidth = branch.thickness;
+        ctx.lineWidth = 10;
+        ctx.stroke();
+      }
+
+      // Draw particles trail
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.018;
+        p.size *= 0.965;
+        if (p.alpha <= 0 || p.size <= 0.2) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, 100%, 75%, ${p.alpha})`;
+        ctx.fill();
+      }
+
+      // ── HOLOGRAPHIC GEOMETRIC WIREFRAME GLOBE ──
+      ctx.save();
+      ctx.setLineDash([4, 6]);
+      const shellRadius = isMobile ? 130 : 220;
+
+      // 1. Draw Longitudinal Rings (vertical slices)
+      const longCount = 3;
+      for (let r = 0; r < longCount; r++) {
+        const phi = (r * Math.PI) / longCount;
+        ctx.beginPath();
+        for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.1) {
+          let x3d = shellRadius * Math.cos(a) * Math.cos(phi);
+          let y3d = shellRadius * Math.sin(a);
+          let z3d = shellRadius * Math.cos(a) * Math.sin(phi);
+
+          if (hoverActive) {
+            x3d += mainParallaxX;
+            y3d += mainParallaxY;
+          }
+
+          // Apply camera rotation
+          const rx1 = x3d * cosY - z3d * sinY;
+          const rz1 = z3d * cosY + x3d * sinY;
+          const ry2 = y3d * cosX - rz1 * sinX;
+          const rz2 = rz1 * cosX + y3d * sinX;
+
+          const zDepth = rz2 + 280;
+          const scale = fov / Math.max(1, zDepth);
+          const sx = cx + rx1 * scale;
+          const sy = cy + ry2 * scale;
+
+          if (a === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.strokeStyle = `hsla(210, 80%, 70%, 0.23)`; // Increased by 10% to make longitudinal lines more visible
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+
+      // 2. Draw Latitudinal Rings (horizontal slices)
+      const latSlices = [-0.5, 0, 0.5];
+      latSlices.forEach((hScale) => {
+        const H = shellRadius * hScale;
+        const r = Math.sqrt(Math.max(0, shellRadius * shellRadius - H * H));
+        ctx.beginPath();
+        for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.1) {
+          let x3d = r * Math.cos(a);
+          let y3d = H;
+          let z3d = r * Math.sin(a);
+
+          if (hoverActive) {
+            x3d += mainParallaxX;
+            y3d += mainParallaxY;
+          }
+
+          // Apply camera rotation
+          const rx1 = x3d * cosY - z3d * sinY;
+          const rz1 = z3d * cosY + x3d * sinY;
+          const ry2 = y3d * cosX - rz1 * sinX;
+          const rz2 = rz1 * cosX + y3d * sinX;
+
+          const zDepth = rz2 + 280;
+          const scale = fov / Math.max(1, zDepth);
+          const sx = cx + rx1 * scale;
+          const sy = cy + ry2 * scale;
+
+          if (a === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.strokeStyle = `hsla(210, 80%, 70%, 0.23)`; // Increased by 10% to make latitudinal lines more visible
+        ctx.lineWidth = 0.8;
         ctx.stroke();
       });
 
-      // Draw nodes — glowing synaptic dots (like the logo's luminous endpoints)
-      nodes.forEach((node) => {
-        const pulse = 0.7 + 0.3 * Math.sin(t * 2 + node.phase);
-        const r = node.radius * pulse;
+      // 3. Draw central vertical axis line
+      ctx.beginPath();
+      // Top pole
+      let tx = 0, ty = -shellRadius, tz = 0;
+      if (hoverActive) {
+        tx += mainParallaxX;
+        ty += mainParallaxY;
+      }
+      let rx1 = tx * cosY - tz * sinY;
+      let rz1 = tz * cosY + tx * sinY;
+      let ry2 = ty * cosX - rz1 * sinX;
+      let rz2 = rz1 * cosX + ty * sinX;
+      let axisScale = fov / Math.max(1, rz2 + 280);
+      ctx.moveTo(cx + rx1 * axisScale, cy + ry2 * axisScale);
 
-        // Outer glow halo
-        const glowRadius = r * 5;
-        const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius);
-        glow.addColorStop(0, `hsla(${node.hue}, 85%, 72%, ${0.25 * pulse})`);
-        glow.addColorStop(0.5, `hsla(${node.hue}, 80%, 70%, ${0.08 * pulse})`);
-        glow.addColorStop(1, `hsla(${node.hue}, 80%, 70%, 0)`);
+      // Bottom pole
+      tx = 0; ty = shellRadius; tz = 0;
+      if (hoverActive) {
+        tx += mainParallaxX;
+        ty += mainParallaxY;
+      }
+      rx1 = tx * cosY - tz * sinY;
+      rz1 = tz * cosY + tx * sinY;
+      ry2 = ty * cosX - rz1 * sinX;
+      rz2 = rz1 * cosX + ty * sinX;
+      axisScale = fov / Math.max(1, rz2 + 280);
+      ctx.lineTo(cx + rx1 * axisScale, cy + ry2 * axisScale);
+
+      ctx.strokeStyle = `hsla(210, 80%, 70%, 0.22)`; // Increased by 10% to make vertical axis more visible
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+      ctx.restore();
+
+      // ── CENTRAL HUD GYRO DIAL ──
+      ctx.save();
+      const coreRadius = isMobile ? 35 : 50;
+      const dialRadius = coreRadius * 1.8;
+      
+      // Dial Ring
+      ctx.beginPath();
+      for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.1) {
+        let x3d = dialRadius * Math.cos(a);
+        let y3d = 0;
+        let z3d = dialRadius * Math.sin(a);
+
+        if (hoverActive) {
+          x3d += mainParallaxX;
+          y3d += mainParallaxY;
+        }
+
+        const rx1 = x3d * cosY - z3d * sinY;
+        const rz1 = z3d * cosY + x3d * sinY;
+        const ry2 = y3d * cosX - rz1 * sinX;
+        const rz2 = rz1 * cosX + y3d * sinX;
+
+        const zDepth = rz2 + 280;
+        const scale = fov / Math.max(1, zDepth);
+        const sx = cx + rx1 * scale;
+        const sy = cy + ry2 * scale;
+
+        if (a === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.strokeStyle = `hsla(260, 95%, 75%, 0.34)`; // Increased by 10% to make dial ring more visible
+      ctx.lineWidth = 1.0;
+      ctx.stroke();
+
+      // Dial Tick Marks
+      ctx.beginPath();
+      const tickCount = 16;
+      for (let i = 0; i < tickCount; i++) {
+        const a = (i * Math.PI * 2) / tickCount + t * 0.05; // slowly rotate ticks
+        
+        let x3d_in = dialRadius * Math.cos(a);
+        let y3d_in = 0;
+        let z3d_in = dialRadius * Math.sin(a);
+
+        let x3d_out = (dialRadius + 4) * Math.cos(a);
+        let y3d_out = 0;
+        let z3d_out = (dialRadius + 4) * Math.sin(a);
+
+        if (hoverActive) {
+          x3d_in += mainParallaxX;
+          y3d_in += mainParallaxY;
+          x3d_out += mainParallaxX;
+          y3d_out += mainParallaxY;
+        }
+
+        // Project inner
+        let rx1 = x3d_in * cosY - z3d_in * sinY;
+        let rz1 = z3d_in * cosY + x3d_in * sinY;
+        let ry2 = y3d_in * cosX - rz1 * sinX;
+        let rz2 = rz1 * cosX + y3d_in * sinX;
+        let scale = fov / Math.max(1, rz2 + 280);
+        ctx.moveTo(cx + rx1 * scale, cy + ry2 * scale);
+
+        // Project outer
+        rx1 = x3d_out * cosY - z3d_out * sinY;
+        rz1 = z3d_out * cosY + x3d_out * sinY;
+        ry2 = y3d_out * cosX - rz1 * sinX;
+        rz2 = rz1 * cosX + y3d_out * sinX;
+        scale = fov / Math.max(1, rz2 + 280);
+        ctx.lineTo(cx + rx1 * scale, cy + ry2 * scale);
+      }
+      ctx.strokeStyle = `hsla(260, 95%, 75%, 0.38)`; // Increased by 10% to make tick marks more visible
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+      ctx.restore();
+
+      // ── NESTED CALIBRATION COORDINATE AXES ──
+      ctx.save();
+      const axisLength = 32;
+      const axes = [
+        { x1: -axisLength, y1: 0, z1: 0, x2: axisLength, y2: 0, z2: 0, hue: 190 }, // X-Axis (Cyan)
+        { x1: 0, y1: -axisLength, z1: 0, x2: 0, y2: axisLength, z2: 0, hue: 260 }, // Y-Axis (Indigo)
+        { x1: 0, y1: 0, z1: -axisLength, x2: 0, y2: 0, z2: axisLength, hue: 325 }  // Z-Axis (Magenta)
+      ];
+
+      axes.forEach((axis) => {
+        let ax1 = axis.x1;
+        let ay1 = axis.y1;
+        let az1 = axis.z1;
+        let ax2 = axis.x2;
+        let ay2 = axis.y2;
+        let az2 = axis.z2;
+
+        if (hoverActive) {
+          ax1 += mainParallaxX;
+          ay1 += mainParallaxY;
+          ax2 += mainParallaxX;
+          ay2 += mainParallaxY;
+        }
+
+        // Rotate point 1
+        const rx1_1 = ax1 * cosY - az1 * sinY;
+        const rz1_1 = az1 * cosY + ax1 * sinY;
+        const ry2_1 = ay1 * cosX - rz1_1 * sinX;
+        const rz2_1 = rz1_1 * cosX + ay1 * sinX;
+
+        // Rotate point 2
+        const rx1_2 = ax2 * cosY - az2 * sinY;
+        const rz1_2 = az2 * cosY + ax2 * sinY;
+        const ry2_2 = ay2 * cosX - rz1_2 * sinX;
+        const rz2_2 = rz1_2 * cosX + ay2 * sinX;
+
+        // Project point 1
+        const scale1 = fov / Math.max(1, rz2_1 + 280);
+        const sx1 = cx + rx1_1 * scale1;
+        const sy1 = cy + ry2_1 * scale1;
+
+        // Project point 2
+        const scale2 = fov / Math.max(1, rz2_2 + 280);
+        const sx2 = cx + rx1_2 * scale2;
+        const sy2 = cy + ry2_2 * scale2;
+
+        // Draw axis line
         ctx.beginPath();
-        ctx.arc(node.x, node.y, glowRadius, 0, Math.PI * 2);
+        ctx.moveTo(sx1, sy1);
+        ctx.lineTo(sx2, sy2);
+        ctx.strokeStyle = `hsla(${axis.hue}, 90%, 75%, 0.35)`; // Increased by 10% to make axes lines more visible
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+
+        // Draw small tick marks/nodes at the tips
+        ctx.beginPath();
+        ctx.arc(sx1, sy1, 1.2, 0, Math.PI * 2);
+        ctx.arc(sx2, sy2, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${axis.hue}, 100%, 80%, 0.55)`;
+        ctx.fill();
+      });
+      ctx.restore();
+
+      // Draw branches (3D depth-aware)
+      branches.forEach((branch) => {
+        const fromNode = nodes[branch.from];
+        const toNode = nodes[branch.to];
+        if (!fromNode || !toNode) return;
+
+        const from = rotatedCoords[branch.from];
+        const to = rotatedCoords[branch.to];
+
+        const avgDepth = (from.zDepth + to.zDepth) / 2;
+        const depthFactor = Math.max(0.12, 1 - (avgDepth - 100) / 380);
+
+        const pulse = 0.5 + 0.5 * Math.sin(t * 1.5 + branch.from * 0.5);
+        const alpha = branch.opacity * depthFactor * (0.6 + 0.4 * pulse);
+
+        // Curved line midpoint in rotated 3D space (perfect tracking for signals)
+        const mx3d = (fromNode.x + toNode.x) / 2 + Math.sin(t + branch.from) * 10;
+        const my3d = (fromNode.y + toNode.y) / 2 + Math.cos(t + branch.from) * 10;
+        const mz3d = (fromNode.z + toNode.z) / 2;
+
+        const grad = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
+        grad.addColorStop(0, `hsla(${fromNode.hue}, 75%, 65%, ${alpha})`);
+        grad.addColorStop(1, `hsla(${toNode.hue}, 75%, 65%, ${alpha})`);
+
+        ctx.beginPath();
+        // Drawing curve using 3D Bezier coordinates projected to 2D
+        const segments = 5;
+        for (let s = 0; s <= segments; s++) {
+          const factor = s / segments;
+          const px3d = (1 - factor) * (1 - factor) * fromNode.x + 2 * (1 - factor) * factor * mx3d + factor * factor * toNode.x;
+          const py3d = (1 - factor) * (1 - factor) * fromNode.y + 2 * (1 - factor) * factor * my3d + factor * factor * toNode.y;
+          const pz3d = (1 - factor) * (1 - factor) * fromNode.z + 2 * (1 - factor) * factor * mz3d + factor * factor * toNode.z;
+
+          const zDepth = pz3d + 280;
+          const scale = fov / Math.max(1, zDepth);
+          const sx = cx + px3d * scale;
+          const sy = cy + py3d * scale;
+
+          if (s === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = branch.thickness * Math.max(0.35, depthFactor);
+        ctx.stroke();
+      });
+
+      // Draw 3D intersecting orbital rings (fully aligned with the camera and globe parallax)
+      for (let rIdx = 0; rIdx < 3; rIdx++) {
+        const orbitRadius = isMobile ? 55 : 85;
+        const tiltX = (rIdx === 0 ? 0.4 : rIdx === 1 ? -0.4 : 0) + Math.sin(t * 0.2) * 0.1;
+        const tiltY = (rIdx === 0 ? Math.PI / 6 : rIdx === 1 ? -Math.PI / 4 : Math.PI / 2) + t * 0.15;
+        const orbitSpeed = 1.3 + rIdx * 0.4;
+        const orbitPhase = t * orbitSpeed;
+        
+        // Render thin orbital path in 3D (camera aligned)
+        ctx.beginPath();
+        for (let a = 0; a <= Math.PI * 2 + 0.15; a += 0.15) {
+          const rx3d = Math.cos(a) * orbitRadius;
+          const ry3d = Math.sin(a) * orbitRadius * 0.3;
+          const rz3d = Math.sin(a) * orbitRadius * 0.95;
+
+          // Apply local orbit orientation/tilt
+          let ox = rx3d * Math.cos(tiltY) - rz3d * Math.sin(tiltY);
+          let oz = rz3d * Math.cos(tiltY) + rx3d * Math.sin(tiltY);
+          let oy = ry3d * Math.cos(tiltX) - oz * Math.sin(tiltX);
+          let ozFinal = oz * Math.cos(tiltX) + ry3d * Math.sin(tiltX);
+
+          // Apply global parallax to align with sphere
+          if (hoverActive) {
+            ox += mainParallaxX;
+            oy += mainParallaxY;
+          }
+
+          // Apply CAMERA rotation
+          const cx1 = ox * cosY - ozFinal * sinY;
+          const cz1 = ozFinal * cosY + ox * sinY;
+          const cy2 = oy * cosX - cz1 * sinX;
+          const cz2 = cz1 * cosX + oy * sinX;
+
+          const zDepth = cz2 + 280;
+          const scale = fov / Math.max(1, zDepth);
+          const sx = cx + cx1 * scale;
+          const sy = cy + cy2 * scale;
+
+          if (a === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.strokeStyle = `hsla(${190 + rIdx * 45}, 90%, 75%, 0.32)`; // Increased by 10% to make orbital paths more visible
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+
+        // Calculate satellite position in 3D
+        const satX3d = Math.cos(orbitPhase) * orbitRadius;
+        const satY3d = Math.sin(orbitPhase) * orbitRadius * 0.3;
+        const satZ3d = Math.sin(orbitPhase) * orbitRadius * 0.95;
+
+        // Apply local orbit orientation/tilt
+        let sX1 = satX3d * Math.cos(tiltY) - satZ3d * Math.sin(tiltY);
+        let sZ1 = satZ3d * Math.cos(tiltY) + satX3d * Math.sin(tiltY);
+        let sY2 = satY3d * Math.cos(tiltX) - sZ1 * Math.sin(tiltX);
+        let sZ2 = sZ1 * Math.cos(tiltX) + satY3d * Math.sin(tiltX);
+
+        // Apply global parallax to align with sphere
+        if (hoverActive) {
+          sX1 += mainParallaxX;
+          sY2 += mainParallaxY;
+        }
+
+        // Apply CAMERA rotation
+        const scx1 = sX1 * cosY - sZ2 * sinY;
+        const scz1 = sZ2 * cosY + sX1 * sinY;
+        const scy2 = sY2 * cosX - scz1 * sinX;
+        const scz2 = scz1 * cosX + sY2 * sinX;
+
+        const satDepth = scz2 + 280;
+        const satScale = fov / Math.max(1, satDepth);
+        const satX = cx + scx1 * satScale;
+        const satY = cy + scy2 * satScale;
+
+        const depthFactor = Math.max(0.1, 1 - (satDepth - 100) / 380);
+
+        // Draw quantum satellite core & glow
+        const glow = ctx.createRadialGradient(satX, satY, 0, satX, satY, 6 * depthFactor);
+        glow.addColorStop(0, '#ffffff');
+        glow.addColorStop(0.4, `hsla(${190 + rIdx * 45}, 100%, 75%, 0.75)`);
+        glow.addColorStop(1, `hsla(${190 + rIdx * 45}, 100%, 75%, 0)`);
+
+        ctx.beginPath();
+        ctx.arc(satX, satY, 6 * depthFactor, 0, Math.PI * 2);
         ctx.fillStyle = glow;
         ctx.fill();
 
-        // Core dot — brighter, more saturated
         ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-        const sat = node.layer === 0 ? 90 : 75;
-        const light = node.layer === 0 ? 62 : 68;
-        ctx.fillStyle = `hsla(${node.hue}, ${sat}%, ${light}%, ${0.7 + 0.3 * pulse})`;
+        ctx.arc(satX, satY, 1.3, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+
+      // Draw light signals crawling in 3D
+      signals.forEach((signal) => {
+        signal.progress += signal.speed;
+        if (signal.progress >= 1) {
+          const branch = branches[signal.branchIndex];
+          const targetNodeIdx = signal.forward ? branch.to : branch.from;
+
+          signal.progress = 0;
+          signal.branchIndex = Math.floor(Math.random() * branches.length);
+          signal.speed = 0.003 + Math.random() * 0.005;
+          signal.forward = Math.random() > 0.5;
+
+          // Spark synaptic bursts from core nodes
+          if (nodes[targetNodeIdx].layer === 0 && Math.random() > 0.6) {
+            const connected = branches
+              .map((b, idx) => ({ ...b, idx }))
+              .filter(b => b.from === targetNodeIdx || b.to === targetNodeIdx);
+            
+            const burstCount = Math.min(3, connected.length);
+            for (let bIdx = 0; bIdx < burstCount; bIdx++) {
+              if (signals.length < 24) {
+                const b = connected[bIdx];
+                signals.push({
+                  branchIndex: b.idx,
+                  progress: 0,
+                  speed: 0.005 + Math.random() * 0.007,
+                  forward: b.from === targetNodeIdx,
+                });
+              }
+            }
+            if (signals.length > 18) {
+              signals.splice(8, signals.length - 18);
+            }
+          }
+        }
+
+        const branch = branches[signal.branchIndex];
+        if (!branch) return;
+
+        const fromNode = nodes[branch.from];
+        const toNode = nodes[branch.to];
+        if (!fromNode || !toNode) return;
+
+        const tProgress = signal.forward ? signal.progress : 1 - signal.progress;
+
+        const mx3d = (fromNode.x + toNode.x) / 2 + Math.sin(t + branch.from) * 10;
+        const my3d = (fromNode.y + toNode.y) / 2 + Math.cos(t + branch.from) * 10;
+        const mz3d = (fromNode.z + toNode.z) / 2;
+
+        const sigX3d = (1 - tProgress) * (1 - tProgress) * fromNode.x + 2 * (1 - tProgress) * tProgress * mx3d + tProgress * tProgress * toNode.x;
+        const sigY3d = (1 - tProgress) * (1 - tProgress) * fromNode.y + 2 * (1 - tProgress) * tProgress * my3d + tProgress * tProgress * toNode.y;
+        const sigZ3d = (1 - tProgress) * (1 - tProgress) * fromNode.z + 2 * (1 - tProgress) * tProgress * mz3d + tProgress * tProgress * toNode.z;
+
+        // Project signal 3D coordinates to 2D
+        const zDepth = sigZ3d + 280;
+        const scale = fov / Math.max(1, zDepth);
+        const sigX = cx + sigX3d * scale;
+        const sigY = cy + sigY3d * scale;
+
+        const depthFactor = Math.max(0.1, 1 - (zDepth - 100) / 380);
+        const pulseSize = (4 + Math.sin(t * 10) * 1.5) * depthFactor;
+
+        // Calculate 2D velocity vector of signal for aerodynamic spark tails
+        const nextProgress = tProgress + 0.01;
+        const nextX3d = (1 - nextProgress) * (1 - nextProgress) * fromNode.x + 2 * (1 - nextProgress) * nextProgress * mx3d + nextProgress * nextProgress * toNode.x;
+        const nextY3d = (1 - nextProgress) * (1 - nextProgress) * fromNode.y + 2 * (1 - nextProgress) * nextProgress * my3d + nextProgress * nextProgress * toNode.y;
+        const nextZ3d = (1 - nextProgress) * (1 - nextProgress) * fromNode.z + 2 * (1 - nextProgress) * nextProgress * mz3d + nextProgress * nextProgress * toNode.z;
+
+        const scaleNext = fov / Math.max(1, nextZ3d + 280);
+        const sigXNext = cx + nextX3d * scaleNext;
+        const sigYNext = cy + nextY3d * scaleNext;
+        const vx2d = sigXNext - sigX;
+        const vy2d = sigYNext - sigY;
+
+        // Neon dual-tone highlights: choose random neon highlight color for sparks
+        const sparkHue = Math.random() > 0.5 ? 325 : 185; // Magenta or Cyan
+
+        // Spawn trailing dust particles (aerodynamic cometary trailing trail)
+        if (Math.random() > 0.4) {
+          particles.push({
+            x: sigX,
+            y: sigY,
+            vx: -vx2d * 0.35 + (Math.random() - 0.5) * 0.15,
+            vy: -vy2d * 0.35 + (Math.random() - 0.5) * 0.15,
+            alpha: 0.65 * depthFactor,
+            size: pulseSize * 1.2,
+            hue: sparkHue,
+          });
+        }
+
+        // Signal glow: neon magenta core with electric cyan outer aura for ultimate premium look
+        const glow = ctx.createRadialGradient(sigX, sigY, 0, sigX, sigY, pulseSize * 5.0);
+        glow.addColorStop(0, 'rgba(255, 255, 255, 1)');
+        glow.addColorStop(0.25, `hsla(325, 100%, 72%, ${0.85 * depthFactor})`); // Neon Pink/Magenta
+        glow.addColorStop(0.65, `hsla(185, 100%, 70%, ${0.5 * depthFactor})`);  // Neon Cyan
+        glow.addColorStop(1, 'rgba(99, 102, 241, 0)');
+        
+        ctx.beginPath();
+        ctx.arc(sigX, sigY, pulseSize * 5.0, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
         ctx.fill();
 
-        // Bright center highlight (for core nodes)
+        // Signal core
+        ctx.beginPath();
+        ctx.arc(sigX, sigY, pulseSize * 0.95, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      });
+
+      // Draw cursor connections
+      if (hoverActive && !isMobile) {
+        const mousePos = { x: mouseRef.current.x, y: mouseRef.current.y };
+        const closeNodes: { idx: number; dist: number }[] = [];
+        
+        rotatedCoords.forEach((coord, idx) => {
+          const d = Math.hypot(coord.x - mousePos.x, coord.y - mousePos.y);
+          if (d < 180) {
+            closeNodes.push({ idx, dist: d });
+          }
+        });
+
+        closeNodes.sort((a, b) => a.dist - b.dist);
+        const connections = closeNodes.slice(0, 5);
+
+        connections.forEach(({ idx, dist }) => {
+          const coord = rotatedCoords[idx];
+          const node = nodes[idx];
+          const alpha = (1 - dist / 180) * 0.15 * Math.max(0.2, (1 - (coord.zDepth - 100) / 380));
+
+          const grad = ctx.createLinearGradient(coord.x, coord.y, mousePos.x, mousePos.y);
+          grad.addColorStop(0, `hsla(${node.hue}, 90%, 70%, ${alpha})`);
+          grad.addColorStop(1, `rgba(99, 102, 241, 0.01)`);
+
+          ctx.beginPath();
+          ctx.moveTo(coord.x, coord.y);
+          ctx.lineTo(mousePos.x, mousePos.y);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(coord.x, coord.y, node.radius * 1.3, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${node.hue}, 100%, 80%, ${alpha * 2})`;
+          ctx.fill();
+        });
+      }
+
+      // Draw nodes sorted by depth (painter's algorithm)
+      const sortedNodeIndices = nodes
+        .map((node, idx) => ({ node, idx, zDepth: rotatedCoords[idx].zDepth }))
+        .sort((a, b) => b.zDepth - a.zDepth);
+
+      sortedNodeIndices.forEach(({ node, idx, zDepth }) => {
+        const pos = rotatedCoords[idx];
+        if (node.layer === 2) {
+          // Draw ambient background space dust
+          const r = node.radius;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${node.hue}, 80%, 75%, 0.18)`;
+          ctx.fill();
+          return;
+        }
+
+        // Decreased pulse amplitude to 15% to make the blinking more subtle and elegant
+        const pulse = 0.85 + 0.15 * Math.sin(t * 2.2 + node.phase);
+        const depthFactor = Math.max(0.12, 1 - (zDepth - 100) / 380);
+
+        // Ripple proximity glow boost
+        let rippleGlow = 0;
+        ripples.forEach((r) => {
+          const dx = node.x - (r.x - cx);
+          const dy = node.y - (r.y - cy);
+          const dz = node.z;
+          const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+          const diff = Math.abs(dist - r.radius);
+          if (diff < 40) {
+            rippleGlow += (1 - diff / 40) * r.opacity * 1.8;
+          }
+        });
+
+        const r = node.radius * pulse * (1 + rippleGlow * 0.3) * Math.max(0.5, depthFactor);
+        
+        // Dimmed node glow base opacity by 15% (from 0.28 to 0.22)
+        const baseOpacity = (0.22 * pulse * (1 + rippleGlow * 0.85)) * depthFactor;
+
+        // Glow halo
+        const glowRadius = r * (4.5 + rippleGlow * 2);
+        const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowRadius);
+        glow.addColorStop(0, `hsla(${node.hue}, 90%, 70%, ${baseOpacity})`);
+        glow.addColorStop(0.5, `hsla(${node.hue}, 80%, 65%, ${baseOpacity * 0.3})`);
+        glow.addColorStop(1, `hsla(${node.hue}, 80%, 65%, 0)`);
+        
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, glowRadius, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
+        ctx.fill();
+
+        // Node center (dimmed opacity by 15%)
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+        const sat = node.layer === 0 ? 95 : 80;
+        const light = node.layer === 0 ? 65 : 70;
+        ctx.fillStyle = `hsla(${node.hue}, ${sat}%, ${light}%, ${(0.62 + 0.21 * pulse) * depthFactor})`;
+        ctx.fill();
+
+        // Center highlight core (dimmed core highlight by 15%)
         if (node.layer === 0) {
           ctx.beginPath();
-          ctx.arc(node.x, node.y, r * 0.4, 0, Math.PI * 2);
-          ctx.fillStyle = `hsla(${node.hue}, 100%, 85%, ${0.8 * pulse})`;
+          ctx.arc(pos.x, pos.y, r * 0.45, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${node.hue}, 100%, 88%, ${0.76 * pulse * depthFactor})`;
           ctx.fill();
         }
       });
@@ -270,12 +1096,14 @@ function NeuralConstellation() {
     window.addEventListener('resize', resize);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseleave', handleMouseLeave);
+    canvas.addEventListener('mousedown', handleMouseDown);
 
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
+      canvas.removeEventListener('mousedown', handleMouseDown);
     };
   }, [initNetwork]);
 
@@ -283,9 +1111,15 @@ function NeuralConstellation() {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full pointer-events-auto z-[1]"
+      style={{
+        maskImage: 'radial-gradient(circle at var(--mask-x, 74%) var(--mask-y, 48%), white 30%, transparent 75%)',
+        WebkitMaskImage: 'radial-gradient(circle at var(--mask-x, 74%) var(--mask-y, 48%), white 30%, transparent 75%)'
+      }}
     />
   );
 }
+
+
 
 /** Find the index of the closest node in a subset */
 function findClosest(target: { x: number; y: number }, candidates: Node[]): number {
@@ -422,7 +1256,7 @@ export default function Hero() {
       {/* ── Neural Constellation Canvas ── */}
       <motion.div
         style={{ opacity: networkOpacity, scale: networkScale }}
-        className="absolute inset-0 z-[1] lg:left-[25%] lg:origin-left"
+        className="absolute inset-0 z-[1] pointer-events-none"
       >
         <NeuralConstellation />
       </motion.div>
@@ -445,10 +1279,10 @@ export default function Hero() {
       {/* ── Main Content ── */}
       <motion.div
         style={{ y: contentY, opacity: contentOpacity }}
-        className="relative z-20 w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 min-h-0 lg:min-h-screen flex items-center"
+        className="relative z-20 w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 min-h-0 lg:min-h-screen flex items-center pointer-events-none"
       >
         <div className="w-full grid grid-cols-1 lg:grid-cols-2 items-center">
-          <div className="w-full max-w-4xl mx-auto lg:mx-0 lg:max-w-xl flex flex-col items-center text-center lg:items-start lg:text-left">
+          <div className="w-full max-w-4xl mx-auto lg:mx-0 lg:max-w-xl flex flex-col items-center text-center lg:items-start lg:text-left pointer-events-auto">
 
           {/* Status Pill */}
           <motion.div
@@ -476,36 +1310,34 @@ export default function Hero() {
             className="mb-4 md:mb-6"
           >
             {/* Line 1: We think, */}
-            <motion.h1 className="flex items-baseline justify-center lg:justify-start gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em]">
-              <motion.span variants={wordReveal} className="text-foreground">
+            <h1 className="flex items-baseline justify-center lg:justify-start gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em] overflow-hidden py-1">
+              <motion.span variants={wordReveal} className="inline-block text-foreground">
                 We
               </motion.span>
-              <motion.span variants={wordReveal}>
-                <span className="bg-gradient-to-r from-[#4f8bfa] via-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
-                  think,
-                </span>
+              <motion.span variants={wordReveal} className="inline-block bg-gradient-to-r from-[#4f8bfa] via-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
+                think,
               </motion.span>
-            </motion.h1>
+            </h1>
  
             {/* Line 2: you grow */}
-            <motion.h1 className="flex items-baseline justify-center lg:justify-start gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em] -mt-2 md:-mt-3">
-              <motion.span variants={wordReveal} className="text-foreground">
+            <h1 className="flex items-baseline justify-center lg:justify-start gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em] overflow-hidden -mt-2 md:-mt-3 py-1">
+              <motion.span variants={wordReveal} className="inline-block text-foreground">
                 you
               </motion.span>
-              <motion.span variants={wordReveal}>
-                <span className="bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#c084fc] bg-clip-text text-transparent">
-                  grow
-                </span>
+              <motion.span variants={wordReveal} className="inline-block bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#c084fc] bg-clip-text text-transparent">
+                grow
               </motion.span>
-            </motion.h1>
+            </h1>
  
             {/* Line 3: — that's the deal. */}
-            <motion.p
-              variants={wordReveal}
-              className="text-[clamp(1.1rem,2.2vw,1.75rem)] font-medium text-foreground/35 mt-2 tracking-[-0.01em]"
-            >
-              — that&apos;s the deal.
-            </motion.p>
+            <div className="overflow-hidden">
+              <motion.p
+                variants={wordReveal}
+                className="text-[clamp(1.1rem,2.2vw,1.75rem)] font-medium text-foreground/35 mt-2 tracking-[-0.01em]"
+              >
+                — that&apos;s the deal.
+              </motion.p>
+            </div>
           </motion.div>
  
           {/* ── Subheadline ── */}

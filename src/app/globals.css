@@ -746,15 +746,15 @@ mark {
   
   /* Scale down large margins */
   #hero .mb-12, 
-  #hero .md:mb-12 {
+  #hero .md\:mb-12 {
     margin-bottom: 1rem !important;
   }
   #hero .mb-16, 
-  #hero .md:mb-16 {
+  #hero .md\:mb-16 {
     margin-bottom: 1.75rem !important;
   }
   #hero .mb-6, 
-  #hero .md:mb-6 {
+  #hero .md\:mb-6 {
     margin-bottom: 0.5rem !important;
   }
   
@@ -776,11 +776,11 @@ mark {
   }
   
   #hero .mb-12, 
-  #hero .md:mb-12 {
+  #hero .md\:mb-12 {
     margin-bottom: 0.5rem !important;
   }
   #hero .mb-16, 
-  #hero .md:mb-16 {
+  #hero .md\:mb-16 {
     margin-bottom: 1rem !important;
   }
   
