@@ -1,18 +1,303 @@
 'use client';
 
 import { useRef, useEffect, useCallback } from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import Logo from '@/components/shared/Logo';
 import Link from 'next/link';
 
 /* ═══════════════════════════════════════════════
-   NEURAL CONSTELLATION — Canvas visualization
-   Mirrors the Cognisa logo's dendrite / synapse 
-   visual language in blue→purple gradient.
+   NEURAL CONSTELLATION 2D — Mobile background canvas
    ═══════════════════════════════════════════════ */
 
-interface Node {
+interface Node2D {
+  x: number;
+  y: number;
+  baseX: number;
+  baseY: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  hue: number;
+  phase: number;
+  speed: number;
+  layer: number; // 0=core, 1=mid, 2=outer
+}
+
+interface Branch2D {
+  from: number;
+  to: number;
+  thickness: number;
+  opacity: number;
+}
+
+function NeuralConstellation2D() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: 0, y: 0, active: false });
+  const nodesRef = useRef<Node2D[]>([]);
+  const branchesRef = useRef<Branch2D[]>([]);
+
+  const initNetwork = useCallback((w: number, h: number) => {
+    const nodes: Node2D[] = [];
+    const branches: Branch2D[] = [];
+
+    // Center of the constellation — offset right like the mockup
+    const cx = w * 0.62;
+    const cy = h * 0.42;
+
+    // Core nodes — the central "synapse" cluster
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.3;
+      const dist = 15 + Math.random() * 35;
+      nodes.push({
+        x: cx + Math.cos(angle) * dist,
+        y: cy + Math.sin(angle) * dist,
+        baseX: cx + Math.cos(angle) * dist,
+        baseY: cy + Math.sin(angle) * dist,
+        vx: 0, vy: 0,
+        radius: 4 + Math.random() * 3,
+        hue: 220 + Math.random() * 15, // bright blue core
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.25 + Math.random() * 0.35,
+        layer: 0,
+      });
+    }
+
+    // Mid-layer nodes — branching dendrites
+    for (let i = 0; i < 22; i++) {
+      const angle = (i / 22) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 70 + Math.random() * 140;
+      const px = cx + Math.cos(angle) * dist;
+      const py = cy + Math.sin(angle) * dist;
+      nodes.push({
+        x: px, y: py, baseX: px, baseY: py,
+        vx: 0, vy: 0,
+        radius: 2.5 + Math.random() * 2.5,
+        hue: 235 + Math.random() * 35, // indigo-violet
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.18 + Math.random() * 0.28,
+        layer: 1,
+      });
+    }
+
+    // Outer nodes — terminal synaptic endpoints (like the logo's dots)
+    for (let i = 0; i < 35; i++) {
+      const angle = (i / 35) * Math.PI * 2 + Math.random() * 0.5;
+      const dist = 160 + Math.random() * 250;
+      const bias = (angle > -Math.PI * 0.4 && angle < Math.PI * 0.9) ? 1.35 : 0.75;
+      const px = cx + Math.cos(angle) * dist * bias;
+      const py = cy + Math.sin(angle) * dist * bias;
+      nodes.push({
+        x: px, y: py, baseX: px, baseY: py,
+        vx: 0, vy: 0,
+        radius: 2 + Math.random() * 3.5,
+        hue: 255 + Math.random() * 50, // violet-purple-pink
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.12 + Math.random() * 0.18,
+        layer: 2,
+      });
+    }
+
+    // Build organic branches — connect layers like dendrites
+    const coreCount = 6;
+    const midStart = coreCount;
+    const midEnd = midStart + 22;
+    const outerStart = midEnd;
+
+    // Core-to-core connections
+    for (let i = 0; i < coreCount; i++) {
+      for (let j = i + 1; j < coreCount; j++) {
+        if (Math.random() > 0.25) {
+          branches.push({ from: i, to: j, thickness: 1.5, opacity: 0.3 });
+        }
+      }
+    }
+
+    // Core-to-mid connections (main dendrite branches)
+    for (let i = midStart; i < midEnd; i++) {
+      const closest = findClosest2D(nodes[i], nodes.slice(0, coreCount));
+      branches.push({ from: closest, to: i, thickness: 1.0, opacity: 0.22 });
+      if (Math.random() > 0.55) {
+        const other = midStart + Math.floor(Math.random() * 22);
+        if (other !== i) {
+          branches.push({ from: i, to: other, thickness: 0.6, opacity: 0.1 });
+        }
+      }
+    }
+
+    // Mid-to-outer connections (terminal dendrites)
+    for (let i = outerStart; i < nodes.length; i++) {
+      const closest = findClosest2D(nodes[i], nodes.slice(midStart, midEnd)) + midStart;
+      branches.push({ from: closest, to: i, thickness: 0.5, opacity: 0.15 });
+    }
+
+    nodesRef.current = nodes;
+    branchesRef.current = branches;
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    const dpr = Math.min(window.devicePixelRatio, 2);
+
+    const resize = () => {
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      initNetwork(w, h);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+        active: true,
+      };
+    };
+
+    const handleMouseLeave = () => {
+      mouseRef.current.active = false;
+    };
+
+    const draw = (time: number) => {
+      const w = canvas.offsetWidth;
+      const h = canvas.offsetHeight;
+
+      // OPTIMIZATION: If screen width is desktop-sized (>= 1024px), skip calculations & drawing
+      if (window.innerWidth >= 1024) {
+        animId = requestAnimationFrame(draw);
+        return;
+      }
+
+      ctx.clearRect(0, 0, w, h);
+
+      const nodes = nodesRef.current;
+      const branches = branchesRef.current;
+      const t = time * 0.001;
+
+      // Animate nodes — gentle organic drift
+      nodes.forEach((node) => {
+        const drift = Math.sin(t * node.speed + node.phase);
+        const driftY = Math.cos(t * node.speed * 0.7 + node.phase + 1);
+        const amplitude = node.layer === 0 ? 3 : node.layer === 1 ? 6 : 10;
+
+        node.x = node.baseX + drift * amplitude;
+        node.y = node.baseY + driftY * amplitude * 0.8;
+
+        // Mouse interaction — nodes are attracted toward cursor
+        if (mouseRef.current.active) {
+          const dx = mouseRef.current.x - node.x;
+          const dy = mouseRef.current.y - node.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 280) {
+            const force = (1 - dist / 280) * 0.2;
+            node.x += dx * force * (node.layer === 0 ? 0.2 : 1);
+            node.y += dy * force * (node.layer === 0 ? 0.2 : 1);
+          }
+        }
+      });
+
+      // Draw branches — curved organic lines like dendrites
+      branches.forEach((branch) => {
+        const from = nodes[branch.from];
+        const to = nodes[branch.to];
+        if (!from || !to) return;
+
+        const pulse = 0.5 + 0.5 * Math.sin(t * 1.5 + branch.from * 0.5);
+        const alpha = branch.opacity * (0.6 + 0.4 * pulse);
+
+        const mx = (from.x + to.x) / 2 + Math.sin(t + branch.from) * 8;
+        const my = (from.y + to.y) / 2 + Math.cos(t + branch.to) * 8;
+
+        const grad = ctx.createLinearGradient(from.x, from.y, to.x, to.y);
+        grad.addColorStop(0, `hsla(${from.hue}, 70%, 65%, ${alpha})`);
+        grad.addColorStop(1, `hsla(${to.hue}, 70%, 65%, ${alpha})`);
+
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.quadraticCurveTo(mx, my, to.x, to.y);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = branch.thickness;
+        ctx.stroke();
+      });
+
+      // Draw nodes — glowing synaptic dots
+      nodes.forEach((node) => {
+        const pulse = 0.7 + 0.3 * Math.sin(t * 2 + node.phase);
+        const r = node.radius * pulse;
+
+        const glowRadius = r * 5;
+        const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius);
+        glow.addColorStop(0, `hsla(${node.hue}, 85%, 72%, ${0.25 * pulse})`);
+        glow.addColorStop(0.5, `hsla(${node.hue}, 80%, 70%, ${0.08 * pulse})`);
+        glow.addColorStop(1, `hsla(${node.hue}, 80%, 70%, 0)`);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, glowRadius, 0, Math.PI * 2);
+        ctx.fillStyle = glow;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        const sat = node.layer === 0 ? 90 : 75;
+        const light = node.layer === 0 ? 62 : 68;
+        ctx.fillStyle = `hsla(${node.hue}, ${sat}%, ${light}%, ${0.7 + 0.3 * pulse})`;
+        ctx.fill();
+
+        if (node.layer === 0) {
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r * 0.4, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${node.hue}, 100%, 85%, ${0.8 * pulse})`;
+          ctx.fill();
+        }
+      });
+
+      animId = requestAnimationFrame(draw);
+    };
+
+    resize();
+    animId = requestAnimationFrame(draw);
+    window.addEventListener('resize', resize);
+    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [initNetwork]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-auto z-[1]"
+    />
+  );
+}
+
+function findClosest2D(target: { x: number; y: number }, candidates: Node2D[]): number {
+  let minDist = Infinity;
+  let minIdx = 0;
+  candidates.forEach((c, i) => {
+    const d = Math.hypot(target.x - c.x, target.y - c.y);
+    if (d < minDist) { minDist = d; minIdx = i; }
+  });
+  return minIdx;
+}
+
+/* ═══════════════════════════════════════════════
+   NEURAL CONSTELLATION 3D — Desktop background canvas
+   ═══════════════════════════════════════════════ */
+
+interface Node3D {
   x3d: number;
   y3d: number;
   z3d: number;
@@ -31,21 +316,21 @@ interface Node {
   z: number;
 }
 
-interface Branch {
+interface Branch3D {
   from: number;
   to: number;
   thickness: number;
   opacity: number;
 }
 
-interface Signal {
+interface Signal3D {
   branchIndex: number;
   progress: number; // 0 to 1
   speed: number;
   forward: boolean;
 }
 
-interface Ripple {
+interface Ripple3D {
   x: number;
   y: number;
   radius: number;
@@ -55,7 +340,7 @@ interface Ripple {
   hue: number;
 }
 
-interface SignalParticle {
+interface SignalParticle3D {
   x: number;
   y: number;
   vx: number;
@@ -65,14 +350,14 @@ interface SignalParticle {
   hue: number;
 }
 
-function NeuralConstellation() {
+function NeuralConstellation3D() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseRef = useRef({ x: 0, y: 0, active: false });
-  const nodesRef = useRef<Node[]>([]);
-  const branchesRef = useRef<Branch[]>([]);
-  const signalsRef = useRef<Signal[]>([]);
-  const ripplesRef = useRef<Ripple[]>([]);
-  const signalParticlesRef = useRef<SignalParticle[]>([]);
+  const nodesRef = useRef<Node3D[]>([]);
+  const branchesRef = useRef<Branch3D[]>([]);
+  const signalsRef = useRef<Signal3D[]>([]);
+  const ripplesRef = useRef<Ripple3D[]>([]);
+  const signalParticlesRef = useRef<SignalParticle3D[]>([]);
   const cameraAngleRef = useRef(0);
   const isMobileRef = useRef(false);
   const centerRef = useRef<{ x: number; y: number } | null>(null);
@@ -82,9 +367,9 @@ function NeuralConstellation() {
     isMobileRef.current = w < 768;
     const isMobile = isMobileRef.current;
 
-    const nodes: Node[] = [];
-    const branches: Branch[] = [];
-    const signals: Signal[] = [];
+    const nodes: Node3D[] = [];
+    const branches: Branch3D[] = [];
+    const signals: Signal3D[] = [];
 
     // Center of constellation - full bleed layout
     const cx = w * (isMobile ? 0.5 : 0.74);
@@ -92,7 +377,6 @@ function NeuralConstellation() {
     centerRef.current = { x: cx, y: cy };
 
     // Generate 3D Geodesic Brain Sphere
-    // Layer 0: Core Nucleus (Inner sphere)
     const coreCount = isMobile ? 8 : 16;
     const coreRadius = isMobile ? 35 : 50;
     for (let i = 0; i < coreCount; i++) {
@@ -103,7 +387,6 @@ function NeuralConstellation() {
       const y3d = coreRadius * Math.sin(phi) * Math.sin(theta);
       const z3d = coreRadius * Math.cos(phi);
       
-      // Warm cores: mix of electric blue and purple
       const hue = 190 + (i % 3) * 40; 
       
       nodes.push({
@@ -118,19 +401,16 @@ function NeuralConstellation() {
       });
     }
 
-    // Layer 1: Outer Shell (Fibonacci Sphere - geometrically perfect)
     const shellCount = isMobile ? 32 : 80;
     const shellRadius = isMobile ? 130 : 220;
     for (let i = 0; i < shellCount; i++) {
       const phi = Math.acos(1 - 2 * (i + 0.5) / shellCount);
       const theta = Math.PI * (1 + Math.sqrt(5)) * i;
       
-      // Removed random jitter for a perfect high-tech geometric sphere shape
       const x3d = shellRadius * Math.sin(phi) * Math.cos(theta);
       const y3d = shellRadius * Math.sin(phi) * Math.sin(theta);
       const z3d = shellRadius * Math.cos(phi);
       
-      // Color based on latitude (phi) for a beautiful gradient sweep across the sphere!
       const hue = 210 + (phi / Math.PI) * 70;
       
       nodes.push({
@@ -145,12 +425,11 @@ function NeuralConstellation() {
       });
     }
 
-    // Layer 2: Deep Ambient Space Dust (Background stars)
     const ambientCount = isMobile ? 15 : 45;
     for (let i = 0; i < ambientCount; i++) {
       const x3d = (Math.random() - 0.5) * w * 1.6;
       const y3d = (Math.random() - 0.5) * h * 1.6;
-      const z3d = (Math.random() - 0.5) * 400 - 200; // deeply recessed
+      const z3d = (Math.random() - 0.5) * 400 - 200;
       
       nodes.push({
         x3d, y3d, z3d,
@@ -164,11 +443,9 @@ function NeuralConstellation() {
       });
     }
 
-    // Create 3D Mesh Connections
-    // Connect each node to nearest neighbors in its own layer, and core to shell bridges
     for (let i = 0; i < nodes.length; i++) {
       const n1 = nodes[i];
-      if (n1.layer === 2) continue; // Ambient space dust has no connection lines
+      if (n1.layer === 2) continue;
       
       const distances: { idx: number; dist: number }[] = [];
       for (let j = 0; j < nodes.length; j++) {
@@ -205,7 +482,6 @@ function NeuralConstellation() {
       }
     }
 
-    // Initialize light signals crawling over the 3D grid
     const signalCount = isMobile ? 4 : 12;
     for (let i = 0; i < signalCount; i++) {
       if (branches.length > 0) {
@@ -261,7 +537,6 @@ function NeuralConstellation() {
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
-      // Spawn energetic ripple
       ripplesRef.current.push({
         x: clickX,
         y: clickY,
@@ -272,14 +547,12 @@ function NeuralConstellation() {
         hue: 200 + Math.random() * 80,
       });
 
-      // Sparks signals near click in 3D
       const nodes = nodesRef.current;
       const branches = branchesRef.current;
       const cx = centerRef.current ? centerRef.current.x : (canvas.offsetWidth * (isMobileRef.current ? 0.5 : 0.74));
       const cy = centerRef.current ? centerRef.current.y : (canvas.offsetHeight * (isMobileRef.current ? 0.45 : 0.48));
 
       nodes.forEach((node, nodeIdx) => {
-        // Project to 3D center at z=0 for checking click proximity
         const dist = Math.hypot(node.x - (clickX - cx), node.y - (clickY - cy));
         if (dist < 140 && Math.random() > 0.35) {
           const connected = branches
@@ -302,6 +575,13 @@ function NeuralConstellation() {
     const draw = (time: number) => {
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
+
+      // OPTIMIZATION: If screen width is mobile, don't animate or draw
+      if (window.innerWidth < 1024) {
+        animId = requestAnimationFrame(draw);
+        return;
+      }
+
       ctx.clearRect(0, 0, w, h);
 
       const nodes = nodesRef.current;
@@ -312,9 +592,7 @@ function NeuralConstellation() {
       const isMobile = isMobileRef.current;
       const t = time * 0.001;
 
-      // Slow 3D camera drift angle
       cameraAngleRef.current += isMobile ? 0.0001 : 0.0002;
-      const angle = cameraAngleRef.current;
       
       const baseCx = w * (isMobile ? 0.5 : 0.74);
       const baseCy = h * (isMobile ? 0.45 : 0.48);
@@ -323,17 +601,14 @@ function NeuralConstellation() {
         centerRef.current = { x: baseCx, y: baseCy };
       }
 
-      // Proximity check: hover/interaction is only active when the cursor is physically on/near the globe center
       const distToCenter = Math.hypot(mouseRef.current.x - centerRef.current.x, mouseRef.current.y - centerRef.current.y);
-      const maxInteractRadius = isMobile ? 180 : 320; // 320px interaction boundary around the globe
+      const maxInteractRadius = isMobile ? 180 : 320;
       const hoverActive = mouseRef.current.active && distToCenter < maxInteractRadius;
 
-      // Smoothly guide target center toward mouse/hover/click position if hover is active
       let targetCx = baseCx;
       let targetCy = baseCy;
 
       if (hoverActive) {
-        // Clamp ranges to prevent overlay issues with text on the left, but allow high interactivity
         const maxOffsetLeft = isMobile ? w * 0.5 : w * 0.22;
         const maxOffsetRight = isMobile ? w * 0.5 : w * 0.22;
         const rawOffset = mouseRef.current.x - baseCx;
@@ -343,18 +618,15 @@ function NeuralConstellation() {
         targetCy = Math.max(h * 0.2, Math.min(h * 0.8, mouseRef.current.y));
       }
 
-      // Smooth interpolation for butter-glide following (decreased to 0.022 for extra slow fluid momentum)
       centerRef.current.x += (targetCx - centerRef.current.x) * 0.022;
       centerRef.current.y += (targetCy - centerRef.current.y) * 0.022;
 
       const cx = centerRef.current.x;
       const cy = centerRef.current.y;
 
-      // Update custom properties for dynamic gradient masking
       canvas.style.setProperty('--mask-x', `${(cx / w) * 100}%`);
       canvas.style.setProperty('--mask-y', `${(cy / h) * 100}%`);
 
-      // Eased camera rotation angles to keep visual rotation changes buttery smooth
       const targetRotY = hoverActive ? (mouseRef.current.x - w / 2) * 0.0006 : 0;
       const targetRotX = hoverActive ? (mouseRef.current.y - h / 2) * 0.0006 : 0;
 
@@ -362,7 +634,7 @@ function NeuralConstellation() {
         cameraRotationRef.current = { x: targetRotX, y: targetRotY };
       }
 
-      cameraRotationRef.current.x += (targetRotX - cameraRotationRef.current.x) * 0.035; // slow inertia
+      cameraRotationRef.current.x += (targetRotX - cameraRotationRef.current.x) * 0.035;
       cameraRotationRef.current.y += (targetRotY - cameraRotationRef.current.y) * 0.035;
 
       const angleY = t * 0.12 + cameraRotationRef.current.y;
@@ -375,7 +647,6 @@ function NeuralConstellation() {
       
       const fov = 350;
 
-      // Setup global main-sphere parallax parameters to prevent inner/outer layer sliding
       let mainParallaxX = 0;
       let mainParallaxY = 0;
       if (hoverActive) {
@@ -385,19 +656,15 @@ function NeuralConstellation() {
         mainParallaxY = -mdy * 0.04;
       }
 
-      // Update node drift physics + 3D rotation + parallax + ripple responses
       nodes.forEach((node) => {
         const drift = Math.sin(t * node.speed + node.phase);
         const driftY = Math.cos(t * node.speed * 0.8 + node.phase + 1);
-        
-        // Reduced core & shell drift amplitude to keep geometric sphere and dial structure extremely clean
         const amplitude = (node.layer === 0 ? 1.5 : node.layer === 1 ? 6.0 : 24.0);
 
         let curX = node.baseX3d + drift * amplitude;
         let curY = node.baseY3d + driftY * amplitude * 0.8;
         let curZ = node.baseZ3d;
 
-        // Apply Parallax: Layer 0 and 1 are unified at mainParallax to keep them perfectly concentric
         if (hoverActive) {
           if (node.layer === 2) {
             const mdx = mouseRef.current.x - w / 2;
@@ -410,14 +677,12 @@ function NeuralConstellation() {
           }
         }
 
-        // Apply 3D rotation
         let x1 = curX * cosY - curZ * sinY;
         let z1 = curZ * cosY + curX * sinY;
         
         let y2 = curY * cosX - z1 * sinX;
         let z2 = z1 * cosX + curY * sinX;
 
-        // Repulsion from active ripples in projected space
         ripples.forEach((r) => {
           const dx = x1 - (r.x - cx);
           const dy = y2 - (r.y - cy);
@@ -437,9 +702,8 @@ function NeuralConstellation() {
         node.z = z2;
       });
 
-      // Project nodes to 2D screen coordinates
       const rotatedCoords = nodes.map((node) => {
-        const zDepth = node.z + 280; // offset back in space
+        const zDepth = node.z + 280;
         const scale = fov / Math.max(1, zDepth);
         return {
           x: cx + node.x * scale,
@@ -449,7 +713,6 @@ function NeuralConstellation() {
         };
       });
 
-      // Draw active ripples
       for (let i = ripples.length - 1; i >= 0; i--) {
         const r = ripples[i];
         r.radius += r.speed;
@@ -471,7 +734,6 @@ function NeuralConstellation() {
         ctx.stroke();
       }
 
-      // Draw particles trail
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
@@ -489,12 +751,10 @@ function NeuralConstellation() {
         ctx.fill();
       }
 
-      // ── HOLOGRAPHIC GEOMETRIC WIREFRAME GLOBE ──
       ctx.save();
       ctx.setLineDash([4, 6]);
       const shellRadius = isMobile ? 130 : 220;
 
-      // 1. Draw Longitudinal Rings (vertical slices)
       const longCount = 3;
       for (let r = 0; r < longCount; r++) {
         const phi = (r * Math.PI) / longCount;
@@ -509,7 +769,6 @@ function NeuralConstellation() {
             y3d += mainParallaxY;
           }
 
-          // Apply camera rotation
           const rx1 = x3d * cosY - z3d * sinY;
           const rz1 = z3d * cosY + x3d * sinY;
           const ry2 = y3d * cosX - rz1 * sinX;
@@ -523,12 +782,11 @@ function NeuralConstellation() {
           if (a === 0) ctx.moveTo(sx, sy);
           else ctx.lineTo(sx, sy);
         }
-        ctx.strokeStyle = `hsla(210, 80%, 70%, 0.23)`; // Increased by 10% to make longitudinal lines more visible
+        ctx.strokeStyle = `hsla(210, 80%, 70%, 0.23)`; 
         ctx.lineWidth = 0.8;
         ctx.stroke();
       }
 
-      // 2. Draw Latitudinal Rings (horizontal slices)
       const latSlices = [-0.5, 0, 0.5];
       latSlices.forEach((hScale) => {
         const H = shellRadius * hScale;
@@ -544,7 +802,6 @@ function NeuralConstellation() {
             y3d += mainParallaxY;
           }
 
-          // Apply camera rotation
           const rx1 = x3d * cosY - z3d * sinY;
           const rz1 = z3d * cosY + x3d * sinY;
           const ry2 = y3d * cosX - rz1 * sinX;
@@ -558,14 +815,12 @@ function NeuralConstellation() {
           if (a === 0) ctx.moveTo(sx, sy);
           else ctx.lineTo(sx, sy);
         }
-        ctx.strokeStyle = `hsla(210, 80%, 70%, 0.23)`; // Increased by 10% to make latitudinal lines more visible
+        ctx.strokeStyle = `hsla(210, 80%, 70%, 0.23)`; 
         ctx.lineWidth = 0.8;
         ctx.stroke();
       });
 
-      // 3. Draw central vertical axis line
       ctx.beginPath();
-      // Top pole
       let tx = 0, ty = -shellRadius, tz = 0;
       if (hoverActive) {
         tx += mainParallaxX;
@@ -578,7 +833,6 @@ function NeuralConstellation() {
       let axisScale = fov / Math.max(1, rz2 + 280);
       ctx.moveTo(cx + rx1 * axisScale, cy + ry2 * axisScale);
 
-      // Bottom pole
       tx = 0; ty = shellRadius; tz = 0;
       if (hoverActive) {
         tx += mainParallaxX;
@@ -591,17 +845,15 @@ function NeuralConstellation() {
       axisScale = fov / Math.max(1, rz2 + 280);
       ctx.lineTo(cx + rx1 * axisScale, cy + ry2 * axisScale);
 
-      ctx.strokeStyle = `hsla(210, 80%, 70%, 0.22)`; // Increased by 10% to make vertical axis more visible
+      ctx.strokeStyle = `hsla(210, 80%, 70%, 0.22)`; 
       ctx.lineWidth = 0.8;
       ctx.stroke();
       ctx.restore();
 
-      // ── CENTRAL HUD GYRO DIAL ──
       ctx.save();
       const coreRadius = isMobile ? 35 : 50;
       const dialRadius = coreRadius * 1.8;
       
-      // Dial Ring
       ctx.beginPath();
       for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.1) {
         let x3d = dialRadius * Math.cos(a);
@@ -626,15 +878,14 @@ function NeuralConstellation() {
         if (a === 0) ctx.moveTo(sx, sy);
         else ctx.lineTo(sx, sy);
       }
-      ctx.strokeStyle = `hsla(260, 95%, 75%, 0.34)`; // Increased by 10% to make dial ring more visible
+      ctx.strokeStyle = `hsla(260, 95%, 75%, 0.34)`; 
       ctx.lineWidth = 1.0;
       ctx.stroke();
 
-      // Dial Tick Marks
       ctx.beginPath();
       const tickCount = 16;
       for (let i = 0; i < tickCount; i++) {
-        const a = (i * Math.PI * 2) / tickCount + t * 0.05; // slowly rotate ticks
+        const a = (i * Math.PI * 2) / tickCount + t * 0.05; 
         
         let x3d_in = dialRadius * Math.cos(a);
         let y3d_in = 0;
@@ -651,7 +902,6 @@ function NeuralConstellation() {
           y3d_out += mainParallaxY;
         }
 
-        // Project inner
         let rx1 = x3d_in * cosY - z3d_in * sinY;
         let rz1 = z3d_in * cosY + x3d_in * sinY;
         let ry2 = y3d_in * cosX - rz1 * sinX;
@@ -659,7 +909,6 @@ function NeuralConstellation() {
         let scale = fov / Math.max(1, rz2 + 280);
         ctx.moveTo(cx + rx1 * scale, cy + ry2 * scale);
 
-        // Project outer
         rx1 = x3d_out * cosY - z3d_out * sinY;
         rz1 = z3d_out * cosY + x3d_out * sinY;
         ry2 = y3d_out * cosX - rz1 * sinX;
@@ -667,18 +916,17 @@ function NeuralConstellation() {
         scale = fov / Math.max(1, rz2 + 280);
         ctx.lineTo(cx + rx1 * scale, cy + ry2 * scale);
       }
-      ctx.strokeStyle = `hsla(260, 95%, 75%, 0.38)`; // Increased by 10% to make tick marks more visible
+      ctx.strokeStyle = `hsla(260, 95%, 75%, 0.38)`; 
       ctx.lineWidth = 0.8;
       ctx.stroke();
       ctx.restore();
 
-      // ── NESTED CALIBRATION COORDINATE AXES ──
       ctx.save();
       const axisLength = 32;
       const axes = [
-        { x1: -axisLength, y1: 0, z1: 0, x2: axisLength, y2: 0, z2: 0, hue: 190 }, // X-Axis (Cyan)
-        { x1: 0, y1: -axisLength, z1: 0, x2: 0, y2: axisLength, z2: 0, hue: 260 }, // Y-Axis (Indigo)
-        { x1: 0, y1: 0, z1: -axisLength, x2: 0, y2: 0, z2: axisLength, hue: 325 }  // Z-Axis (Magenta)
+        { x1: -axisLength, y1: 0, z1: 0, x2: axisLength, y2: 0, z2: 0, hue: 190 }, 
+        { x1: 0, y1: -axisLength, z1: 0, x2: 0, y2: axisLength, z2: 0, hue: 260 }, 
+        { x1: 0, y1: 0, z1: -axisLength, x2: 0, y2: 0, z2: axisLength, hue: 325 }  
       ];
 
       axes.forEach((axis) => {
@@ -696,37 +944,31 @@ function NeuralConstellation() {
           ay2 += mainParallaxY;
         }
 
-        // Rotate point 1
         const rx1_1 = ax1 * cosY - az1 * sinY;
         const rz1_1 = az1 * cosY + ax1 * sinY;
         const ry2_1 = ay1 * cosX - rz1_1 * sinX;
         const rz2_1 = rz1_1 * cosX + ay1 * sinX;
 
-        // Rotate point 2
         const rx1_2 = ax2 * cosY - az2 * sinY;
         const rz1_2 = az2 * cosY + ax2 * sinY;
         const ry2_2 = ay2 * cosX - rz1_2 * sinX;
         const rz2_2 = rz1_2 * cosX + ay2 * sinX;
 
-        // Project point 1
         const scale1 = fov / Math.max(1, rz2_1 + 280);
         const sx1 = cx + rx1_1 * scale1;
         const sy1 = cy + ry2_1 * scale1;
 
-        // Project point 2
         const scale2 = fov / Math.max(1, rz2_2 + 280);
         const sx2 = cx + rx1_2 * scale2;
         const sy2 = cy + ry2_2 * scale2;
 
-        // Draw axis line
         ctx.beginPath();
         ctx.moveTo(sx1, sy1);
         ctx.lineTo(sx2, sy2);
-        ctx.strokeStyle = `hsla(${axis.hue}, 90%, 75%, 0.35)`; // Increased by 10% to make axes lines more visible
+        ctx.strokeStyle = `hsla(${axis.hue}, 90%, 75%, 0.35)`; 
         ctx.lineWidth = 0.8;
         ctx.stroke();
 
-        // Draw small tick marks/nodes at the tips
         ctx.beginPath();
         ctx.arc(sx1, sy1, 1.2, 0, Math.PI * 2);
         ctx.arc(sx2, sy2, 1.2, 0, Math.PI * 2);
@@ -735,7 +977,6 @@ function NeuralConstellation() {
       });
       ctx.restore();
 
-      // Draw branches (3D depth-aware)
       branches.forEach((branch) => {
         const fromNode = nodes[branch.from];
         const toNode = nodes[branch.to];
@@ -750,7 +991,6 @@ function NeuralConstellation() {
         const pulse = 0.5 + 0.5 * Math.sin(t * 1.5 + branch.from * 0.5);
         const alpha = branch.opacity * depthFactor * (0.6 + 0.4 * pulse);
 
-        // Curved line midpoint in rotated 3D space (perfect tracking for signals)
         const mx3d = (fromNode.x + toNode.x) / 2 + Math.sin(t + branch.from) * 10;
         const my3d = (fromNode.y + toNode.y) / 2 + Math.cos(t + branch.from) * 10;
         const mz3d = (fromNode.z + toNode.z) / 2;
@@ -760,7 +1000,6 @@ function NeuralConstellation() {
         grad.addColorStop(1, `hsla(${toNode.hue}, 75%, 65%, ${alpha})`);
 
         ctx.beginPath();
-        // Drawing curve using 3D Bezier coordinates projected to 2D
         const segments = 5;
         for (let s = 0; s <= segments; s++) {
           const factor = s / segments;
@@ -781,7 +1020,6 @@ function NeuralConstellation() {
         ctx.stroke();
       });
 
-      // Draw 3D intersecting orbital rings (fully aligned with the camera and globe parallax)
       for (let rIdx = 0; rIdx < 3; rIdx++) {
         const orbitRadius = isMobile ? 55 : 85;
         const tiltX = (rIdx === 0 ? 0.4 : rIdx === 1 ? -0.4 : 0) + Math.sin(t * 0.2) * 0.1;
@@ -789,26 +1027,22 @@ function NeuralConstellation() {
         const orbitSpeed = 1.3 + rIdx * 0.4;
         const orbitPhase = t * orbitSpeed;
         
-        // Render thin orbital path in 3D (camera aligned)
         ctx.beginPath();
         for (let a = 0; a <= Math.PI * 2 + 0.15; a += 0.15) {
           const rx3d = Math.cos(a) * orbitRadius;
           const ry3d = Math.sin(a) * orbitRadius * 0.3;
           const rz3d = Math.sin(a) * orbitRadius * 0.95;
 
-          // Apply local orbit orientation/tilt
           let ox = rx3d * Math.cos(tiltY) - rz3d * Math.sin(tiltY);
           let oz = rz3d * Math.cos(tiltY) + rx3d * Math.sin(tiltY);
           let oy = ry3d * Math.cos(tiltX) - oz * Math.sin(tiltX);
           let ozFinal = oz * Math.cos(tiltX) + ry3d * Math.sin(tiltX);
 
-          // Apply global parallax to align with sphere
           if (hoverActive) {
             ox += mainParallaxX;
             oy += mainParallaxY;
           }
 
-          // Apply CAMERA rotation
           const cx1 = ox * cosY - ozFinal * sinY;
           const cz1 = ozFinal * cosY + ox * sinY;
           const cy2 = oy * cosX - cz1 * sinX;
@@ -822,28 +1056,24 @@ function NeuralConstellation() {
           if (a === 0) ctx.moveTo(sx, sy);
           else ctx.lineTo(sx, sy);
         }
-        ctx.strokeStyle = `hsla(${190 + rIdx * 45}, 90%, 75%, 0.32)`; // Increased by 10% to make orbital paths more visible
+        ctx.strokeStyle = `hsla(${190 + rIdx * 45}, 90%, 75%, 0.32)`; 
         ctx.lineWidth = 0.8;
         ctx.stroke();
 
-        // Calculate satellite position in 3D
         const satX3d = Math.cos(orbitPhase) * orbitRadius;
         const satY3d = Math.sin(orbitPhase) * orbitRadius * 0.3;
         const satZ3d = Math.sin(orbitPhase) * orbitRadius * 0.95;
 
-        // Apply local orbit orientation/tilt
         let sX1 = satX3d * Math.cos(tiltY) - satZ3d * Math.sin(tiltY);
         let sZ1 = satZ3d * Math.cos(tiltY) + satX3d * Math.sin(tiltY);
         let sY2 = satY3d * Math.cos(tiltX) - sZ1 * Math.sin(tiltX);
         let sZ2 = sZ1 * Math.cos(tiltX) + satY3d * Math.sin(tiltX);
 
-        // Apply global parallax to align with sphere
         if (hoverActive) {
           sX1 += mainParallaxX;
           sY2 += mainParallaxY;
         }
 
-        // Apply CAMERA rotation
         const scx1 = sX1 * cosY - sZ2 * sinY;
         const scz1 = sZ2 * cosY + sX1 * sinY;
         const scy2 = sY2 * cosX - scz1 * sinX;
@@ -856,7 +1086,6 @@ function NeuralConstellation() {
 
         const depthFactor = Math.max(0.1, 1 - (satDepth - 100) / 380);
 
-        // Draw quantum satellite core & glow
         const glow = ctx.createRadialGradient(satX, satY, 0, satX, satY, 6 * depthFactor);
         glow.addColorStop(0, '#ffffff');
         glow.addColorStop(0.4, `hsla(${190 + rIdx * 45}, 100%, 75%, 0.75)`);
@@ -873,7 +1102,6 @@ function NeuralConstellation() {
         ctx.fill();
       }
 
-      // Draw light signals crawling in 3D
       signals.forEach((signal) => {
         signal.progress += signal.speed;
         if (signal.progress >= 1) {
@@ -885,7 +1113,6 @@ function NeuralConstellation() {
           signal.speed = 0.003 + Math.random() * 0.005;
           signal.forward = Math.random() > 0.5;
 
-          // Spark synaptic bursts from core nodes
           if (nodes[targetNodeIdx].layer === 0 && Math.random() > 0.6) {
             const connected = branches
               .map((b, idx) => ({ ...b, idx }))
@@ -926,7 +1153,6 @@ function NeuralConstellation() {
         const sigY3d = (1 - tProgress) * (1 - tProgress) * fromNode.y + 2 * (1 - tProgress) * tProgress * my3d + tProgress * tProgress * toNode.y;
         const sigZ3d = (1 - tProgress) * (1 - tProgress) * fromNode.z + 2 * (1 - tProgress) * tProgress * mz3d + tProgress * tProgress * toNode.z;
 
-        // Project signal 3D coordinates to 2D
         const zDepth = sigZ3d + 280;
         const scale = fov / Math.max(1, zDepth);
         const sigX = cx + sigX3d * scale;
@@ -935,7 +1161,6 @@ function NeuralConstellation() {
         const depthFactor = Math.max(0.1, 1 - (zDepth - 100) / 380);
         const pulseSize = (4 + Math.sin(t * 10) * 1.5) * depthFactor;
 
-        // Calculate 2D velocity vector of signal for aerodynamic spark tails
         const nextProgress = tProgress + 0.01;
         const nextX3d = (1 - nextProgress) * (1 - nextProgress) * fromNode.x + 2 * (1 - nextProgress) * nextProgress * mx3d + nextProgress * nextProgress * toNode.x;
         const nextY3d = (1 - nextProgress) * (1 - nextProgress) * fromNode.y + 2 * (1 - nextProgress) * nextProgress * my3d + nextProgress * nextProgress * toNode.y;
@@ -947,10 +1172,8 @@ function NeuralConstellation() {
         const vx2d = sigXNext - sigX;
         const vy2d = sigYNext - sigY;
 
-        // Neon dual-tone highlights: choose random neon highlight color for sparks
-        const sparkHue = Math.random() > 0.5 ? 325 : 185; // Magenta or Cyan
+        const sparkHue = Math.random() > 0.5 ? 325 : 185;
 
-        // Spawn trailing dust particles (aerodynamic cometary trailing trail)
         if (Math.random() > 0.4) {
           particles.push({
             x: sigX,
@@ -963,11 +1186,10 @@ function NeuralConstellation() {
           });
         }
 
-        // Signal glow: neon magenta core with electric cyan outer aura for ultimate premium look
         const glow = ctx.createRadialGradient(sigX, sigY, 0, sigX, sigY, pulseSize * 5.0);
         glow.addColorStop(0, 'rgba(255, 255, 255, 1)');
-        glow.addColorStop(0.25, `hsla(325, 100%, 72%, ${0.85 * depthFactor})`); // Neon Pink/Magenta
-        glow.addColorStop(0.65, `hsla(185, 100%, 70%, ${0.5 * depthFactor})`);  // Neon Cyan
+        glow.addColorStop(0.25, `hsla(325, 100%, 72%, ${0.85 * depthFactor})`); 
+        glow.addColorStop(0.65, `hsla(185, 100%, 70%, ${0.5 * depthFactor})`);  
         glow.addColorStop(1, 'rgba(99, 102, 241, 0)');
         
         ctx.beginPath();
@@ -975,14 +1197,12 @@ function NeuralConstellation() {
         ctx.fillStyle = glow;
         ctx.fill();
 
-        // Signal core
         ctx.beginPath();
         ctx.arc(sigX, sigY, pulseSize * 0.95, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
       });
 
-      // Draw cursor connections
       if (hoverActive && !isMobile) {
         const mousePos = { x: mouseRef.current.x, y: mouseRef.current.y };
         const closeNodes: { idx: number; dist: number }[] = [];
@@ -1020,7 +1240,6 @@ function NeuralConstellation() {
         });
       }
 
-      // Draw nodes sorted by depth (painter's algorithm)
       const sortedNodeIndices = nodes
         .map((node, idx) => ({ node, idx, zDepth: rotatedCoords[idx].zDepth }))
         .sort((a, b) => b.zDepth - a.zDepth);
@@ -1028,7 +1247,6 @@ function NeuralConstellation() {
       sortedNodeIndices.forEach(({ node, idx, zDepth }) => {
         const pos = rotatedCoords[idx];
         if (node.layer === 2) {
-          // Draw ambient background space dust
           const r = node.radius;
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
@@ -1037,11 +1255,9 @@ function NeuralConstellation() {
           return;
         }
 
-        // Decreased pulse amplitude to 15% to make the blinking more subtle and elegant
         const pulse = 0.85 + 0.15 * Math.sin(t * 2.2 + node.phase);
         const depthFactor = Math.max(0.12, 1 - (zDepth - 100) / 380);
 
-        // Ripple proximity glow boost
         let rippleGlow = 0;
         ripples.forEach((r) => {
           const dx = node.x - (r.x - cx);
@@ -1055,11 +1271,8 @@ function NeuralConstellation() {
         });
 
         const r = node.radius * pulse * (1 + rippleGlow * 0.3) * Math.max(0.5, depthFactor);
-        
-        // Dimmed node glow base opacity by 15% (from 0.28 to 0.22)
         const baseOpacity = (0.22 * pulse * (1 + rippleGlow * 0.85)) * depthFactor;
 
-        // Glow halo
         const glowRadius = r * (4.5 + rippleGlow * 2);
         const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowRadius);
         glow.addColorStop(0, `hsla(${node.hue}, 90%, 70%, ${baseOpacity})`);
@@ -1071,7 +1284,6 @@ function NeuralConstellation() {
         ctx.fillStyle = glow;
         ctx.fill();
 
-        // Node center (dimmed opacity by 15%)
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
         const sat = node.layer === 0 ? 95 : 80;
@@ -1079,7 +1291,6 @@ function NeuralConstellation() {
         ctx.fillStyle = `hsla(${node.hue}, ${sat}%, ${light}%, ${(0.62 + 0.21 * pulse) * depthFactor})`;
         ctx.fill();
 
-        // Center highlight core (dimmed core highlight by 15%)
         if (node.layer === 0) {
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, r * 0.45, 0, Math.PI * 2);
@@ -1119,21 +1330,8 @@ function NeuralConstellation() {
   );
 }
 
-
-
-/** Find the index of the closest node in a subset */
-function findClosest(target: { x: number; y: number }, candidates: Node[]): number {
-  let minDist = Infinity;
-  let minIdx = 0;
-  candidates.forEach((c, i) => {
-    const d = Math.hypot(target.x - c.x, target.y - c.y);
-    if (d < minDist) { minDist = d; minIdx = i; }
-  });
-  return minIdx;
-}
-
 /* ═══════════════════════════════════════════════
-   ANIMATED COUNTER
+   ANIMATED COUNTER (USED IN STATS GRID)
    ═══════════════════════════════════════════════ */
 
 function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
@@ -1168,10 +1366,6 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
   return <span ref={ref}>0{suffix}</span>;
 }
 
-/* ═══════════════════════════════════════════════
-   ANIMATION VARIANTS
-   ═══════════════════════════════════════════════ */
-
 const stagger = {
   hidden: {},
   visible: {
@@ -1198,15 +1392,15 @@ const fadeUp = {
   }),
 };
 
-/* ═══════════════════════════════════════════════
-   HERO COMPONENT
-   ═══════════════════════════════════════════════ */
-
 const STATS = [
   { value: 150, suffix: '+', label: 'Projects Delivered' },
   { value: 99, suffix: '%', label: 'Client Satisfaction' },
   { value: 24, suffix: '/7', label: 'Support & Monitoring' },
 ];
+
+/* ═══════════════════════════════════════════════
+   MAIN HERO EXPORT WITH RESPONSIVE SPLIT
+   ═══════════════════════════════════════════════ */
 
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -1216,26 +1410,30 @@ export default function Hero() {
     offset: ['start start', 'end start'],
   });
 
-  const contentY = useTransform(scrollYProgress, [0, 0.4], [0, -80]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
-  const networkOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
-  const networkScale = useTransform(scrollYProgress, [0, 0.35], [1, 1.15]);
+  // Desktop Scroll Transforms
+  const contentYDesktop = useTransform(scrollYProgress, [0, 0.4], [0, -80]);
+  const contentOpacityDesktop = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
+  const networkOpacityDesktop = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
+  const networkScaleDesktop = useTransform(scrollYProgress, [0, 0.35], [1, 1.15]);
+
+  // Mobile Scroll Transforms
+  const contentYMobile = useTransform(scrollYProgress, [0, 0.2], [0, -60]);
+  const contentOpacityMobile = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
   return (
     <section
       id="hero"
       ref={heroRef}
-      className="section-anchor relative min-h-0 lg:min-h-screen pt-28 pb-2 sm:pt-32 md:pt-36 lg:py-0 flex items-center bg-transparent overflow-hidden"
+      className="section-anchor relative min-h-screen lg:min-h-screen pt-28 pb-12 sm:pt-32 md:pt-36 lg:py-0 flex items-center bg-transparent overflow-hidden"
     >
-      {/* ── Logo (desktop & mobile landing) ── */}
+      {/* ── Logo (visible on mobile view only since top sidebar handles desktop) ── */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.3, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute top-6 left-6 md:top-8 md:left-8 lg:hidden z-30"
+        className="absolute top-6 left-6 md:top-8 md:left-8 lg:hidden z-30 pointer-events-auto"
       >
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-36 md:h-36">
-          {/* Static iridescent gradient clipped to circle */}
           <div
             className="absolute inset-0 rounded-full overflow-hidden"
             style={{
@@ -1253,38 +1451,62 @@ export default function Hero() {
         </div>
       </motion.div>
 
-      {/* ── Neural Constellation Canvas ── */}
-      <motion.div
-        style={{ opacity: networkOpacity, scale: networkScale }}
-        className="absolute inset-0 z-[1] pointer-events-none"
-      >
-        <NeuralConstellation />
-      </motion.div>
+      {/* ═══════════════════════════════════════════════
+         MOBILE SPECIFIC BACKGROUNDS (lg:hidden)
+         ═══════════════════════════════════════════════ */}
+      <div className="lg:hidden absolute inset-0 pointer-events-none z-0">
+        {/* Ambient gradient wash (very subtle) */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[60%] h-[70%] bg-gradient-to-bl from-indigo-100/40 via-violet-50/20 to-transparent rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 left-0 w-[40%] h-[50%] bg-gradient-to-tr from-blue-50/30 via-transparent to-transparent rounded-full blur-[100px]" />
+        </div>
 
-      {/* ── Subtle dot-grid texture ── */}
-      <div
-        className="absolute inset-0 z-[0] opacity-[0.025] pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #6366f1 0.8px, transparent 0.8px)',
-          backgroundSize: '28px 28px',
-        }}
-      />
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djI2SDI0VjM0SDBWMjRoMjRWMGgxMnYyNGgyNHYxMEgzNnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-[0.15] pointer-events-none" />
 
-      {/* ── Ambient gradient wash (very subtle) ── */}
-      <div className="absolute inset-0 z-[0] pointer-events-none">
-        <div className="absolute top-0 right-0 w-[60%] h-[70%] bg-gradient-to-bl from-indigo-100/40 via-violet-50/20 to-transparent rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 left-0 w-[40%] h-[50%] bg-gradient-to-tr from-blue-50/30 via-transparent to-transparent rounded-full blur-[100px]" />
+        {/* 2D Neural Constellation Canvas */}
+        <div className="absolute inset-0 z-[1]">
+          <NeuralConstellation2D />
+        </div>
       </div>
 
-      {/* ── Main Content ── */}
-      <motion.div
-        style={{ y: contentY, opacity: contentOpacity }}
-        className="relative z-20 w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 min-h-0 lg:min-h-screen flex items-center pointer-events-none"
-      >
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 items-center">
-          <div className="w-full max-w-4xl mx-auto lg:mx-0 lg:max-w-xl flex flex-col items-center text-center lg:items-start lg:text-left pointer-events-auto">
+      {/* ═══════════════════════════════════════════════
+         DESKTOP SPECIFIC BACKGROUNDS (hidden lg:block)
+         ═══════════════════════════════════════════════ */}
+      <div className="hidden lg:block absolute inset-0 pointer-events-none z-0">
+        {/* Subtle dot-grid texture */}
+        <div
+          className="absolute inset-0 z-[0] opacity-[0.025]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #6366f1 0.8px, transparent 0.8px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
 
-          {/* Status Pill */}
+        {/* Ambient gradient wash */}
+        <div className="absolute inset-0 z-[0]">
+          <div className="absolute top-0 right-0 w-[60%] h-[70%] bg-gradient-to-bl from-indigo-100/40 via-violet-50/20 to-transparent rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 left-0 w-[40%] h-[50%] bg-gradient-to-tr from-blue-50/30 via-transparent to-transparent rounded-full blur-[100px]" />
+        </div>
+
+        {/* 3D Neural Constellation Geodesic Sphere */}
+        <motion.div
+          style={{ opacity: networkOpacityDesktop, scale: networkScaleDesktop }}
+          className="absolute inset-0 z-[1]"
+        >
+          <NeuralConstellation3D />
+        </motion.div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════
+         MAIN CONTENT: MOBILE LAYOUT (lg:hidden)
+         ═══════════════════════════════════════════════ */}
+      <motion.div
+        style={{ y: contentYMobile, opacity: contentOpacityMobile }}
+        className="lg:hidden relative z-20 w-full max-w-[1400px] mx-auto px-4 md:px-8 flex flex-col items-center text-center justify-center pt-4 pb-6 md:pt-8 md:pb-8 pointer-events-none"
+      >
+        <div className="w-full max-w-4xl pt-2 flex flex-col items-center pointer-events-auto">
+          {/* Status Badge */}
           <motion.div
             initial={{ opacity: 0, y: 16, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1302,7 +1524,7 @@ export default function Hero() {
             </div>
           </motion.div>
 
-          {/* ── Headline ── */}
+          {/* Headline */}
           <motion.div
             variants={stagger}
             initial="hidden"
@@ -1310,37 +1532,39 @@ export default function Hero() {
             className="mb-4 md:mb-6"
           >
             {/* Line 1: We think, */}
-            <h1 className="flex items-baseline justify-center lg:justify-start gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em] overflow-hidden py-1">
-              <motion.span variants={wordReveal} className="inline-block text-foreground">
+            <motion.h1 className="flex items-baseline justify-center gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em]">
+              <motion.span variants={wordReveal} className="text-foreground">
                 We
               </motion.span>
-              <motion.span variants={wordReveal} className="inline-block bg-gradient-to-r from-[#4f8bfa] via-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
-                think,
+              <motion.span variants={wordReveal}>
+                <span className="bg-gradient-to-r from-[#4f8bfa] via-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
+                  think,
+                </span>
               </motion.span>
-            </h1>
+            </motion.h1>
  
             {/* Line 2: you grow */}
-            <h1 className="flex items-baseline justify-center lg:justify-start gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em] overflow-hidden -mt-2 md:-mt-3 py-1">
-              <motion.span variants={wordReveal} className="inline-block text-foreground">
+            <motion.h1 className="flex items-baseline justify-center gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em] -mt-2 md:-mt-3">
+              <motion.span variants={wordReveal} className="text-foreground">
                 you
               </motion.span>
-              <motion.span variants={wordReveal} className="inline-block bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#c084fc] bg-clip-text text-transparent">
-                grow
+              <motion.span variants={wordReveal}>
+                <span className="bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#c084fc] bg-clip-text text-transparent">
+                  grow
+                </span>
               </motion.span>
-            </h1>
+            </motion.h1>
  
             {/* Line 3: — that's the deal. */}
-            <div className="overflow-hidden">
-              <motion.p
-                variants={wordReveal}
-                className="text-[clamp(1.1rem,2.2vw,1.75rem)] font-medium text-foreground/35 mt-2 tracking-[-0.01em]"
-              >
-                — that&apos;s the deal.
-              </motion.p>
-            </div>
+            <motion.p
+              variants={wordReveal}
+              className="text-[clamp(1.1rem,2.2vw,1.75rem)] font-medium text-foreground/35 mt-2 tracking-[-0.01em]"
+            >
+              — that&apos;s the deal.
+            </motion.p>
           </motion.div>
- 
-          {/* ── Subheadline ── */}
+
+          {/* Subheadline */}
           <motion.p
             custom={1.0}
             variants={fadeUp}
@@ -1353,47 +1577,43 @@ export default function Hero() {
             <span className="text-foreground/80 font-semibold">software development</span>{' '}
             that transforms your business.
           </motion.p>
- 
-          {/* ── CTAs ── */}
+
+          {/* CTAs */}
           <motion.div
             custom={1.3}
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mb-6 md:mb-16"
+            className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mb-6 md:mb-16 w-full justify-center"
           >
-            {/* Primary */}
-            <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
+            <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
               <Link
                 href="/contact"
-                className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-[15px] bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-[0_6px_30px_rgba(99,102,241,0.25)] hover:opacity-95 transition-all duration-300 overflow-hidden"
+                className="group w-full inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-[15px] bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-[0_6px_30px_rgba(99,102,241,0.25)] hover:opacity-95 transition-all duration-300 overflow-hidden w-full sm:w-auto"
               >
-                {/* Shimmer */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
                 <span className="relative z-10">Get Started</span>
                 <ArrowRight className="relative z-10 w-[18px] h-[18px] transition-transform group-hover:translate-x-1" />
               </Link>
             </motion.div>
- 
-            {/* Secondary */}
-            <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
+            <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} className="w-full sm:w-auto">
               <Link
                 href="/work"
-                className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-foreground/70 text-[15px] border border-indigo-300/40 bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent backdrop-blur-sm hover:border-indigo-300/60 hover:text-foreground transition-all duration-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
+                className="group inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-medium text-foreground/70 text-[15px] border border-indigo-300/40 bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent backdrop-blur-sm hover:border-indigo-300/60 hover:text-foreground transition-all duration-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] w-full sm:w-auto"
               >
                 View Our Work
                 <ChevronRight className="w-4 h-4 opacity-40 group-hover:opacity-80 group-hover:translate-x-0.5 transition-all" />
               </Link>
             </motion.div>
           </motion.div>
- 
-          {/* ── Stats ── */}
+
+          {/* Stats */}
           <motion.div
             custom={1.6}
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 lg:gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 lg:gap-8 w-full"
           >
             {STATS.map((stat, i) => (
               <div key={i} className={`relative overflow-hidden bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.02] to-transparent backdrop-blur-xl rounded-2xl p-3 md:p-4 border border-indigo-300/30 ring-1 ring-indigo-400/10 shadow-[0_4px_16px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.45)] group hover:border-indigo-300/50 transition-all duration-500 ${i === 2 ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
@@ -1417,11 +1637,11 @@ export default function Hero() {
                     </defs>
                   </svg>
                 </div>
-                <div className="relative z-10 flex flex-col items-center lg:items-start gap-1">
+                <div className="relative z-10 flex flex-col items-center gap-1">
                   <span className="text-xl md:text-2xl font-bold text-foreground/80 tracking-tight">
                     <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                   </span>
-                  <span className="text-[9px] md:text-[10px] font-medium text-foreground/45 tracking-wider uppercase flex items-center gap-1.5">
+                  <span className="text-[9px] md:text-[10px] font-medium text-foreground/45 tracking-wider uppercase flex items-center gap-1.5 justify-center">
                     {i === 2 && (
                       <span className="relative flex h-1.5 w-1.5">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -1434,17 +1654,178 @@ export default function Hero() {
               </div>
             ))}
           </motion.div>
-          </div>
- 
         </div>
       </motion.div>
- 
+
+      {/* ═══════════════════════════════════════════════
+         MAIN CONTENT: DESKTOP LAYOUT (hidden lg:flex)
+         ═══════════════════════════════════════════════ */}
+      <motion.div
+        style={{ y: contentYDesktop, opacity: contentOpacityDesktop }}
+        className="hidden lg:flex relative z-20 w-full max-w-[1400px] mx-auto px-12 min-h-screen items-center pointer-events-none"
+      >
+        <div className="w-full grid grid-cols-2 items-center">
+          <div className="w-full max-w-xl flex flex-col items-start text-left pointer-events-auto">
+
+            {/* Status Pill */}
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="mb-12"
+            >
+              <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-indigo-300/40 bg-gradient-to-r from-white/8 via-white/4 to-white/2 shadow-[inset_0_1.5px_1.5px_rgba(255,255,255,0.35),0_8px_24px_rgba(31,38,135,0.05)] backdrop-blur-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-foreground/50 font-mono text-[11px] tracking-[0.18em] uppercase font-semibold">
+                  Software · Development · Automation · AI
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Headline */}
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              animate="visible"
+              className="mb-6"
+            >
+              {/* Line 1: We think, */}
+              <h1 className="flex items-baseline justify-start gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em] overflow-hidden py-1">
+                <motion.span variants={wordReveal} className="inline-block text-foreground">
+                  We
+                </motion.span>
+                <motion.span variants={wordReveal} className="inline-block bg-gradient-to-r from-[#4f8bfa] via-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
+                  think,
+                </motion.span>
+              </h1>
+   
+              {/* Line 2: you grow */}
+              <h1 className="flex items-baseline justify-start gap-[0.3em] text-[clamp(3rem,8vw,7rem)] font-extrabold leading-[1.05] tracking-[-0.04em] overflow-hidden -mt-3 py-1">
+                <motion.span variants={wordReveal} className="inline-block text-foreground">
+                  you
+                </motion.span>
+                <motion.span variants={wordReveal} className="inline-block bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#c084fc] bg-clip-text text-transparent">
+                  grow
+                </motion.span>
+              </h1>
+   
+              {/* Line 3: — that's the deal. */}
+              <div className="overflow-hidden">
+                <motion.p
+                  variants={wordReveal}
+                  className="text-[clamp(1.1rem,2.2vw,1.75rem)] font-medium text-foreground/35 mt-2 tracking-[-0.01em]"
+                >
+                  — that&apos;s the deal.
+                </motion.p>
+              </div>
+            </motion.div>
+   
+            {/* Subheadline */}
+            <motion.p
+              custom={1.0}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="text-lg text-foreground/60 mb-12 max-w-xl leading-[1.7] font-medium"
+            >
+              End-to-end{' '}
+              <span className="text-foreground/80 font-semibold">AI automation</span> and{' '}
+              <span className="text-foreground/80 font-semibold">software development</span>{' '}
+              that transforms your business.
+            </motion.p>
+   
+            {/* CTAs */}
+            <motion.div
+              custom={1.3}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-row items-center gap-5 mb-16"
+            >
+              {/* Primary */}
+              <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
+                <Link
+                  href="/contact"
+                  className="group relative inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-[15px] bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-[0_6px_30px_rgba(99,102,241,0.25)] hover:opacity-95 transition-all duration-300 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+                  <span className="relative z-10">Get Started</span>
+                  <ArrowRight className="relative z-10 w-[18px] h-[18px] transition-transform group-hover:translate-x-1" />
+                </Link>
+              </motion.div>
+   
+              {/* Secondary */}
+              <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}>
+                <Link
+                  href="/work"
+                  className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-medium text-foreground/70 text-[15px] border border-indigo-300/40 bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.015] to-transparent backdrop-blur-sm hover:border-indigo-300/60 hover:text-foreground transition-all duration-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
+                >
+                  View Our Work
+                  <ChevronRight className="w-4 h-4 opacity-40 group-hover:opacity-80 group-hover:translate-x-0.5 transition-all" />
+                </Link>
+              </motion.div>
+            </motion.div>
+   
+            {/* Stats Grid */}
+            <motion.div
+              custom={1.6}
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-3 gap-8 w-full"
+            >
+              {STATS.map((stat, i) => (
+                <div key={i} className="relative overflow-hidden bg-gradient-to-br from-blue-600/[0.04] via-indigo-500/[0.02] to-transparent backdrop-blur-xl rounded-2xl p-4 border border-indigo-300/30 ring-1 ring-indigo-400/10 shadow-[0_4px_16px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.45)] group hover:border-indigo-300/50 transition-all duration-500">
+                  {/* Micro chart background */}
+                  <div className="absolute inset-0 opacity-30 pointer-events-none">
+                    <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                      <motion.path
+                        d={`M0,${35 - i * 5} Q20,${20 - i * 3} 40,${25 - i * 4} T60,${15 - i * 2} T80,${10 - i} T100,${5}`}
+                        fill="none"
+                        stroke="url(#statGrad)"
+                        strokeWidth="1.5"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 1.5, delay: 1.8 + i * 0.2 }}
+                      />
+                      <defs>
+                        <linearGradient id="statGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.1" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </div>
+                  <div className="relative z-10 flex flex-col items-start gap-1">
+                    <span className="text-2xl font-bold text-foreground/80 tracking-tight">
+                      <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                    </span>
+                    <span className="text-[10px] font-medium text-foreground/45 tracking-wider uppercase flex items-center gap-1.5">
+                      {i === 2 && (
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        </span>
+                      )}
+                      {stat.label}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+
       {/* ── Scroll indicator ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2.5, duration: 1 }}
-        style={{ opacity: contentOpacity }}
+        style={{ opacity: contentOpacityDesktop }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20 hidden md:flex"
       >
         <span className="text-[9px] font-mono tracking-[0.25em] uppercase text-foreground/35 hidden md:block">
