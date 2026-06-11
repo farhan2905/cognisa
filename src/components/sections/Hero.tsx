@@ -142,6 +142,7 @@ function NeuralConstellation2D() {
     if (!ctx) return;
 
     let animId: number;
+    let isIntersecting = true;
     const dpr = Math.min(window.devicePixelRatio, 2);
 
     const resize = () => {
@@ -167,6 +168,8 @@ function NeuralConstellation2D() {
     };
 
     const draw = (time: number) => {
+      if (!isIntersecting) return;
+
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
 
@@ -261,14 +264,24 @@ function NeuralConstellation2D() {
       animId = requestAnimationFrame(draw);
     };
 
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      isIntersecting = entry.isIntersecting;
+      if (isIntersecting) {
+        cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(draw);
+      }
+    }, { threshold: 0 });
+
     resize();
-    animId = requestAnimationFrame(draw);
+    observer.observe(canvas);
     window.addEventListener('resize', resize);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
       cancelAnimationFrame(animId);
+      observer.disconnect();
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
@@ -508,6 +521,7 @@ function NeuralConstellation3D() {
     if (!ctx) return;
 
     let animId: number;
+    let isIntersecting = true;
     const dpr = Math.min(window.devicePixelRatio, 2);
 
     const resize = () => {
@@ -573,6 +587,8 @@ function NeuralConstellation3D() {
     };
 
     const draw = (time: number) => {
+      if (!isIntersecting) return;
+
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
 
@@ -1302,8 +1318,17 @@ function NeuralConstellation3D() {
       animId = requestAnimationFrame(draw);
     };
 
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      isIntersecting = entry.isIntersecting;
+      if (isIntersecting) {
+        cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(draw);
+      }
+    }, { threshold: 0 });
+
     resize();
-    animId = requestAnimationFrame(draw);
+    observer.observe(canvas);
     window.addEventListener('resize', resize);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseleave', handleMouseLeave);
@@ -1311,6 +1336,7 @@ function NeuralConstellation3D() {
 
     return () => {
       cancelAnimationFrame(animId);
+      observer.disconnect();
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);

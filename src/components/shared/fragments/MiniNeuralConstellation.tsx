@@ -104,6 +104,7 @@ export default function MiniNeuralConstellation({ className = '' }: { className?
     if (!ctx) return;
 
     let animId: number;
+    let isIntersecting = true;
     const dpr = Math.min(window.devicePixelRatio, 2);
 
     const resize = () => {
@@ -116,6 +117,8 @@ export default function MiniNeuralConstellation({ className = '' }: { className?
     };
 
     const draw = (time: number) => {
+      if (!isIntersecting) return;
+
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       ctx.clearRect(0, 0, w, h);
@@ -175,12 +178,22 @@ export default function MiniNeuralConstellation({ className = '' }: { className?
       animId = requestAnimationFrame(draw);
     };
 
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
+      isIntersecting = entry.isIntersecting;
+      if (isIntersecting) {
+        cancelAnimationFrame(animId);
+        animId = requestAnimationFrame(draw);
+      }
+    }, { threshold: 0 });
+
     resize();
-    animId = requestAnimationFrame(draw);
+    observer.observe(canvas);
     window.addEventListener('resize', resize);
 
     return () => {
       cancelAnimationFrame(animId);
+      observer.disconnect();
       window.removeEventListener('resize', resize);
     };
   }, [initNetwork]);

@@ -127,6 +127,9 @@ body {
       inset 0 1px 0 rgba(255, 255, 255, 0.4),
       inset 0 -1px 0 rgba(255, 255, 255, 0.1);
     border-radius: 24px;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
   
   .glass-card {
@@ -138,6 +141,9 @@ body {
       0 10px 30px rgba(99, 102, 241, 0.04),
       inset 0 1px 0 rgba(255, 255, 255, 0.4);
     border-radius: 16px;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
   
   .glass-panel {
@@ -149,6 +155,9 @@ body {
       inset 0 1px 0 rgba(255, 255, 255, 0.4),
       0 12px 36px rgba(99, 102, 241, 0.05);
     border-radius: 20px;
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
 
   .glass-surface {
@@ -159,6 +168,9 @@ body {
     box-shadow:
       0 10px 32px rgba(99, 102, 241, 0.03),
       inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
 
   .glass-surface-strong {
@@ -169,16 +181,22 @@ body {
     box-shadow:
       0 20px 48px rgba(99, 102, 241, 0.06),
       inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
 
   .glass-surface-soft {
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(38px) saturate(150%);
     -webkit-backdrop-filter: blur(38px) saturate(150%);
-    border: 1px solid rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.15);
     box-shadow:
       0 14px 44px rgba(99, 102, 241, 0.03),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
   }
 
   .section-anchor {
