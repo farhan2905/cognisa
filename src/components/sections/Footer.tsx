@@ -207,18 +207,18 @@ export default function Footer() {
                 <div className="space-y-4">
                   <div>
                     <p className="text-foreground/30 text-xs font-mono uppercase tracking-wider mb-1">Email</p>
-                    <a href="mailto:hello@cognisa.in" className="text-foreground/60 text-sm hover:text-indigo-500 transition-colors inline-flex items-center gap-1">
-                      hello@cognisa.in
+                    <a href="mailto:farhansiddiqui0156@gmail.com" className="text-foreground/60 text-sm hover:text-indigo-500 transition-colors inline-flex items-center gap-1">
+                      farhansiddiqui0156@gmail.com
                       <ArrowUpRight className="w-3 h-3" />
                     </a>
                   </div>
                   <div>
                     <p className="text-foreground/30 text-xs font-mono uppercase tracking-wider mb-1">Phone</p>
-                    <a href="tel:+1234567890" className="text-foreground/60 text-sm hover:text-indigo-500 transition-colors">+1 (234) 567-890</a>
+                    <a href="tel:+918000040485" className="text-foreground/60 text-sm hover:text-indigo-500 transition-colors">+91 80000 40485</a>
                   </div>
                   <div>
                     <p className="text-foreground/30 text-xs font-mono uppercase tracking-wider mb-1">Location</p>
-                    <p className="text-foreground/60 text-sm">New York, NY</p>
+                    <p className="text-foreground/60 text-sm leading-relaxed">RTC 810, Opp. Star Bazar, Adajan, Surat, Gujarat 395009</p>
                   </div>
                 </div>
               </div>

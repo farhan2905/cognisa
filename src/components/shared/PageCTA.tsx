@@ -22,8 +22,8 @@ export default function PageCTA({
   description = "Let's start a conversation about your goals. Our team is ready to craft a custom strategy that drives real, measurable results for your business.",
   primaryText = 'Get a Free Consultation',
   primaryHref = '/contact',
-  secondaryText = 'hello@cognisa.in',
-  secondaryHref = 'mailto:hello@cognisa.in',
+  secondaryText = 'farhansiddiqui0156@gmail.com',
+  secondaryHref = 'mailto:farhansiddiqui0156@gmail.com',
 }: PageCTAProps) {
   return (
     <section className="relative bg-transparent py-16 md:py-24 overflow-hidden">

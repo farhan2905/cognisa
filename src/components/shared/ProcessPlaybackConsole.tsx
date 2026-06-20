@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { Play, Pause, RotateCcw, FastForward, Terminal, CheckCircle2, ChevronRight } from 'lucide-react';
 
 const PHASE_LOGS = [
@@ -86,9 +86,12 @@ export default function ProcessPlaybackConsole({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const lineTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { margin: '-100px' });
+
   // Auto-play loop logic
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && isInView) {
       timerRef.current = setInterval(() => {
         setVisibleLinesCount(1);
         setActivePhaseIndex((prev) => {
@@ -103,7 +106,7 @@ export default function ProcessPlaybackConsole({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPlaying]);
+  }, [isPlaying, isInView]);
 
   // Log line typing simulation
   useEffect(() => {
@@ -139,7 +142,7 @@ export default function ProcessPlaybackConsole({
   };
 
   return (
-    <div className="w-full max-w-[900px] mx-auto rounded-[2rem] border border-indigo-100 bg-white/45 backdrop-blur-md p-4 sm:p-6 shadow-[0_20px_50px_rgba(99,102,241,0.03),inset_0_1px_0_rgba(255,255,255,0.7)]">
+    <div ref={containerRef} className="w-full max-w-[900px] mx-auto rounded-[2rem] border border-indigo-100 bg-white/45 backdrop-blur-md p-4 sm:p-6 shadow-[0_20px_50px_rgba(99,102,241,0.03),inset_0_1px_0_rgba(255,255,255,0.7)]">
       {/* Console Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-100 pb-4 mb-6">
         <div>

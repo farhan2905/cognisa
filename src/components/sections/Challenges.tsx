@@ -236,7 +236,7 @@ function ChallengeCardItem({
 
 export default function Challenges() {
   const ref = useRef<HTMLElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const isInView = useInView(ref, { margin: '-80px' });
   const [activeTab, setActiveTab] = useState<'website' | 'ai' | 'cost'>('website');
   const [autoPlay, setAutoPlay] = useState(true);
 
@@ -422,9 +422,10 @@ export default function Challenges() {
 
         {/* ─── Cards Grid ─── */}
         <CinematicContainer className="min-h-[250px] md:min-h-[280px]">
-          <CinematicFragment direction="bottom" delay={0.4} className="w-full h-full">
-            <AnimatePresence mode="wait">
+          <CinematicFragment direction="bottom" delay={0.4} className="w-full h-full relative">
+            <AnimatePresence mode="popLayout">
             <motion.div
+              layout
               key={activeTab}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

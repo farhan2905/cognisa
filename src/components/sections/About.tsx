@@ -179,7 +179,7 @@ export default function About() {
                     Est. 2020
                   </span>
                   <span className="relative z-10 text-[9px] font-mono text-foreground/35 mt-0.5">
-                    New York, NY
+                    Surat, Gujarat
                   </span>
                 </div>
               </div>

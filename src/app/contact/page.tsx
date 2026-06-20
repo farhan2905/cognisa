@@ -9,9 +9,9 @@ import ContactForm from '@/components/shared/ContactForm';
 import IridescentBlobBackground from '@/components/shared/fragments/IridescentBlobBackground';
 
 const contactInfo = [
-  { icon: Mail, label: 'Email', value: 'hello@cognisa.in', href: 'mailto:hello@cognisa.in', color: '#6366f1' },
-  { icon: Phone, label: 'Phone', value: '+1 (234) 567-890', href: 'tel:+1234567890', color: '#8b5cf6' },
-  { icon: MapPin, label: 'Location', value: 'New York, NY', href: null, color: '#3b82f6' },
+  { icon: Mail, label: 'Email', value: 'farhansiddiqui0156@gmail.com', href: 'mailto:farhansiddiqui0156@gmail.com', color: '#6366f1' },
+  { icon: Phone, label: 'Phone', value: '+91 80000 40485', href: 'tel:+918000040485', color: '#8b5cf6' },
+  { icon: MapPin, label: 'Location', value: 'RTC 810, Opp. Star Bazar, Adajan, Surat, Gujarat 395009', href: null, color: '#3b82f6' },
   { icon: Clock, label: 'Working Hours', value: 'Mon — Fri, 9am — 6pm IST', href: null, color: '#06b6d4' },
 ];
 

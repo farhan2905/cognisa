@@ -74,10 +74,10 @@ export default function CTA() {
                   </Link>
                 </motion.div>
                 <a
-                  href="mailto:hello@cognisa.in"
+                  href="mailto:farhansiddiqui0156@gmail.com"
                   className="inline-flex items-center gap-2 border border-foreground/20 text-foreground px-6 py-3.5 sm:px-10 sm:py-4 rounded-full text-base font-medium hover:bg-foreground/5 hover:border-foreground/30 transition-all duration-300"
                 >
-                  hello@cognisa.in
+                  farhansiddiqui0156@gmail.com
                 </a>
               </div>
             </motion.div>

@@ -138,7 +138,7 @@ export default function MobileNavigation() {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
         {/* Call FAB */}
         <a
-          href="tel:+1234567890"
+          href="tel:+918000040485"
           className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-[0_8px_24px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95 transition-all border border-emerald-400/20"
           aria-label="Call Cognisa"
         >
